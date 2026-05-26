@@ -20,6 +20,8 @@ jobs:
           - lib
           - flakes/default
           - flakes/latest
+          - flakes/devops
+          - flakes/ai
     steps:
       - uses: actions/checkout@v4
 
@@ -42,6 +44,10 @@ jobs:
             script: tests/smoke-default.sh
           - flake: flakes/latest
             script: tests/smoke-latest.sh
+          - flake: flakes/devops
+            script: tests/smoke-devops.sh
+          - flake: flakes/ai
+            script: tests/smoke-ai.sh
     steps:
       - uses: actions/checkout@v4
 

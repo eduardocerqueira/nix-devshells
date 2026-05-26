@@ -30,6 +30,7 @@
     shellAliases = {
       nix-personal-default = "nix develop --profile ~/nix-workspace/personal-default ${nixDevshellsPath}/flakes/default -c zsh -i";
       nix-personal-latest = "nix develop --profile ~/nix-workspace/personal-latest ${nixDevshellsPath}/flakes/latest -c zsh -i";
+      nix-personal-devops = "nix develop --profile ~/nix-workspace/personal-devops ${nixDevshellsPath}/flakes/devops -c zsh -i";
     };
     plugins = [
       {

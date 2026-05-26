@@ -4,6 +4,15 @@ Reproducible dev shells for macOS and Linux — flake-based, profile-persisted.
 
 A small Nix flake library (`mkDevShell`) plus ready-to-use development environments. Designed to coexist with other Nix setups (e.g. work-specific repos) on the same machine.
 
+## Flakes
+
+| Flake | Channel | What it provides |
+|-------|---------|------------------|
+| [`default`](./flakes/default/) | `nixos-24.11` (pinned) | General development — Node 20, Python 3.12, Go 1.23, pnpm, and common CLI tools |
+| [`latest`](./flakes/latest/) | `nixpkgs-unstable` | All optional languages and tools at the newest versions packaged in nixpkgs |
+| [`ai`](./flakes/ai/) | `nixos-24.11` (pinned) | AI / ML workflows — Ollama, Python 3.12 with Hugging Face libs, uv, ffmpeg, git-lfs |
+| [`devops`](./flakes/devops/) | `nixos-24.11` (pinned) | DevOps / SRE — Kubernetes, multi-cloud CLIs, OpenTofu, secrets, and platform utilities |
+
 ## Overview
 
 | Path | Description |
@@ -11,6 +20,9 @@ A small Nix flake library (`mkDevShell`) plus ready-to-use development environme
 | [lib/](./lib/) | Shared `mkDevShell` function used by all flakes |
 | [flakes/default/](./flakes/default/) | **Pinned** shell on `nixos-24.11` (Node 20, Python 3.12, Go 1.23) |
 | [flakes/latest/](./flakes/latest/) | **Latest** shell on `nixpkgs-unstable` (all tools enabled) |
+| [flakes/ai/](./flakes/ai/) | **AI / ML** shell on `nixos-24.11` (Ollama, Hugging Face, Python) |
+| [flakes/devops/](./flakes/devops/) | **DevOps / SRE** shell on `nixos-24.11` (k8s, cloud CLIs, IaC) |
+| [nix-shortcut.sh](./nix-shortcut.sh) | Sourceable shell shortcuts (`nix-ai`, `nix-latest`, …) — no Home Manager changes |
 | [templates/home-manager/](./templates/home-manager/) | Optional Home Manager template with `nix-personal-*` aliases |
 | [config/nix.conf](./config/nix.conf) | Minimal Nix settings (flakes enabled) |
 
@@ -59,18 +71,56 @@ nix develop --profile ~/nix-workspace/personal-default /Users/eduardo/git/eduard
 nix develop --profile ~/nix-workspace/personal-latest /Users/eduardo/git/eduardo/nix-devshells/flakes/latest -c zsh -i
 ```
 
+**AI / ML (Ollama, Hugging Face, Python):**
+
+```sh
+nix develop --profile ~/nix-workspace/personal-ai /Users/eduardo/git/eduardo/nix-devshells/flakes/ai -c zsh -i
+```
+
+**DevOps / SRE (Kubernetes, cloud CLIs, IaC):**
+
+```sh
+nix develop --profile ~/nix-workspace/personal-devops /Users/eduardo/git/eduardo/nix-devshells/flakes/devops -c zsh -i
+```
+
 On first run Nix builds the environment; later runs reuse the profile. Exit with `exit`.
+
+### 4. Shell shortcuts (optional)
+
+If you already manage aliases in Home Manager and want to avoid editing `~/.config/home-manager/home.nix`, source the repo shortcuts in your current shell:
+
+```sh
+source ~/git/eduardo/nix-devshells/nix-shortcut.sh
+```
+
+Then enter any shell with a short command:
+
+```sh
+nix-default   # pinned general dev
+nix-latest    # nixpkgs-unstable
+nix-ai        # AI / ML
+nix-devops    # DevOps / SRE
+```
+
+The script resolves the repo path automatically. Override with `NIX_DEVSHELLS_ROOT` or `NIX_DEVSHELLS_WORKSPACE` if needed.
+
+To load shortcuts in every new terminal, add the `source` line to your `~/.zshrc` (or `~/.bashrc`).
 
 ## Usage
 
-| Shell | Profile | Enter command |
-|-------|---------|---------------|
-| Pinned default | `~/nix-workspace/personal-default` | `nix develop --profile ~/nix-workspace/personal-default /Users/eduardo/git/eduardo/nix-devshells/flakes/default -c zsh -i` |
-| Latest | `~/nix-workspace/personal-latest` | `nix develop --profile ~/nix-workspace/personal-latest /Users/eduardo/git/eduardo/nix-devshells/flakes/latest -c zsh -i` |
-| Re-enter pinned profile | `~/nix-workspace/personal-default` | `nix develop ~/nix-workspace/personal-default -c zsh -i` |
-| Re-enter latest profile | `~/nix-workspace/personal-latest` | `nix develop ~/nix-workspace/personal-latest -c zsh -i` |
-| HM alias (pinned) | — | `nix-personal-default` |
-| HM alias (latest) | — | `nix-personal-latest` |
+| Shell | Profile | Shortcut | Enter command |
+|-------|---------|----------|---------------|
+| Pinned default | `~/nix-workspace/personal-default` | `nix-default` | `nix develop --profile ~/nix-workspace/personal-default /Users/eduardo/git/eduardo/nix-devshells/flakes/default -c zsh -i` |
+| Latest | `~/nix-workspace/personal-latest` | `nix-latest` | `nix develop --profile ~/nix-workspace/personal-latest /Users/eduardo/git/eduardo/nix-devshells/flakes/latest -c zsh -i` |
+| AI / ML | `~/nix-workspace/personal-ai` | `nix-ai` | `nix develop --profile ~/nix-workspace/personal-ai /Users/eduardo/git/eduardo/nix-devshells/flakes/ai -c zsh -i` |
+| DevOps / SRE | `~/nix-workspace/personal-devops` | `nix-devops` | `nix develop --profile ~/nix-workspace/personal-devops /Users/eduardo/git/eduardo/nix-devshells/flakes/devops -c zsh -i` |
+| Re-enter pinned profile | `~/nix-workspace/personal-default` | — | `nix develop ~/nix-workspace/personal-default -c zsh -i` |
+| Re-enter latest profile | `~/nix-workspace/personal-latest` | — | `nix develop ~/nix-workspace/personal-latest -c zsh -i` |
+| Re-enter AI profile | `~/nix-workspace/personal-ai` | — | `nix develop ~/nix-workspace/personal-ai -c zsh -i` |
+| Re-enter DevOps profile | `~/nix-workspace/personal-devops` | — | `nix develop ~/nix-workspace/personal-devops -c zsh -i` |
+| HM alias (pinned) | — | `nix-personal-default` | requires Home Manager template |
+| HM alias (latest) | — | `nix-personal-latest` | requires Home Manager template |
+| HM alias (devops) | — | `nix-personal-devops` | requires Home Manager template |
 
 ## Available shells
 
@@ -115,9 +165,37 @@ nix develop --profile ~/nix-workspace/personal-latest /Users/eduardo/git/eduardo
 
 **Note:** Nix only ships what is packaged in [nixpkgs](https://github.com/NixOS/nixpkgs). If upstream has Java 26 or Python 3.14.5 but nixpkgs has not merged those yet, the shell uses the newest available nixpkgs version (e.g. Temurin 25, Python 3.14.4).
 
+### `flakes/ai` — AI / ML
+
+Tracks **`nixos-24.11`**. Python 3.12 with Hugging Face libraries pre-installed; heavy ML deps (torch, transformers, etc.) are added per-project via `uv`.
+
+| Tool / area | Included |
+|-------------|----------|
+| Local LLMs | Ollama (`OLLAMA_HOST`, `OLLAMA_MODELS` configured on enter) |
+| Python | 3.12 + uv + pip; `huggingface-hub`, `tokenizers`, `safetensors` |
+| Hugging Face | `huggingface-cli`; set `HF_TOKEN` for gated models |
+| Media & storage | ffmpeg, git-lfs |
+
+Also includes the shared CLI bundle (gh, ripgrep, fd, bat, etc.).
+
+### `flakes/devops` — DevOps / SRE
+
+Tracks **`nixos-24.11`**. Kubernetes-first shell with multi-cloud CLIs and infrastructure tooling.
+
+| Tool / area | Included |
+|-------------|----------|
+| Kubernetes | kubectl, helm, k9s, kubectx, stern, kubecolor, helmfile, fluxcd, argocd |
+| Cloud CLIs | AWS, Azure, GCP, Cloudflare (`cloudflared`, `wrangler`) |
+| IaC & secrets | OpenTofu (`terraform` alias), sops, age, tflint, tfsec, checkov, step-cli |
+| SRE utilities | dive, lazydocker, grpcurl, httpie, yq, direnv, actionlint, pre-commit |
+
+Shell shortcuts: `k`, `kns`, `kgp`, `kgpa`. Respects `KUBECONFIG`, `AWS_PROFILE`, and other cloud env vars.
+
 ## Optional: Home Manager aliases
 
-Copy the template and customize the `USER CONFIGURATION` block:
+Prefer [shell shortcuts](#4-shell-shortcuts-optional) if you already have a Home Manager setup and want to avoid merging alias changes into `~/.config/home-manager/home.nix`.
+
+Alternatively, copy the template and customize the `USER CONFIGURATION` block:
 
 ```sh
 mkdir -p ~/.config/home-manager
@@ -130,7 +208,8 @@ Then use:
 
 ```sh
 nix-personal-default   # pinned
-nix-personal-latest      # latest
+nix-personal-latest    # latest
+nix-personal-devops    # devops / sre
 ```
 
 See [templates/home-manager/README.md](./templates/home-manager/README.md) for coexistence notes with other Nix repos.
@@ -139,7 +218,7 @@ See [templates/home-manager/README.md](./templates/home-manager/README.md) for c
 
 One Nix install serves all repos. Avoid conflicts by:
 
-- **Separate profile names** — e.g. `personal-default`, `personal-latest` vs work profiles in `~/nix-workspace/`
+- **Separate profile names** — e.g. `personal-default`, `personal-latest`, `personal-ai`, `personal-devops` vs work profiles in `~/nix-workspace/`
 - **Separate alias prefixes** — `nix-personal-*` vs work aliases
 - **Git identity via `includeIf`** — don't rely on switching Home Manager for work vs personal email
 
@@ -214,8 +293,12 @@ Run locally before opening a PR:
 nix flake check ./lib
 nix flake check ./flakes/default
 nix flake check ./flakes/latest
+nix flake check ./flakes/ai
+nix flake check ./flakes/devops
 nix develop ./flakes/default --command bash tests/smoke-default.sh
 nix develop ./flakes/latest --command bash tests/smoke-latest.sh
+nix develop ./flakes/ai --command bash tests/smoke-ai.sh
+nix develop ./flakes/devops --command bash tests/smoke-devops.sh
 ```
 
 ## CI
@@ -224,7 +307,7 @@ GitHub Actions runs on every push to `main` and on pull requests ([`.github/work
 
 | Job | What it checks |
 |-----|----------------|
-| **flake check** | Evaluates `lib`, `flakes/default`, and `flakes/latest` |
+| **flake check** | Evaluates `lib`, `flakes/default`, `flakes/latest`, `flakes/ai`, and `flakes/devops` |
 | **smoke test** | Builds each dev shell on Linux and verifies required tools and version constraints |
 
 To require CI before merge, enable branch protection on `main` and select the **flake check** and **smoke test** checks in GitHub repository settings.
