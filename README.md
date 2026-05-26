@@ -206,6 +206,29 @@ nix flake update --flake flakes/latest
 
 Re-enter the shell to pick up changes.
 
+## Testing
+
+Run locally before opening a PR:
+
+```sh
+nix flake check ./lib
+nix flake check ./flakes/default
+nix flake check ./flakes/latest
+nix develop ./flakes/default --command bash tests/smoke-default.sh
+nix develop ./flakes/latest --command bash tests/smoke-latest.sh
+```
+
+## CI
+
+GitHub Actions runs on every push to `main` and on pull requests ([`.github/workflows/ci.yml`](./.github/workflows/ci.yml)):
+
+| Job | What it checks |
+|-----|----------------|
+| **flake check** | Evaluates `lib`, `flakes/default`, and `flakes/latest` |
+| **smoke test** | Builds each dev shell on Linux and verifies required tools and version constraints |
+
+To require CI before merge, enable branch protection on `main` and select the **flake check** and **smoke test** checks in GitHub repository settings.
+
 ## License
 
 MIT — see [LICENSE](./LICENSE).
