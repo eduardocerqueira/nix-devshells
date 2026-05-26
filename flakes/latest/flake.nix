@@ -1,9 +1,9 @@
 {
-  description = "General-purpose development environment (pinned nixos-24.11)";
+  description = "All tools on nixpkgs-unstable (latest versions)";
 
   inputs = {
     base.url = "path:../../lib";
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
   };
 
   outputs = { self, base, nixpkgs }:
@@ -22,14 +22,22 @@
           default = base.lib.mkDevShell {
             inherit system pkgs;
 
-            node = pkgs.nodejs_20;
-            pnpm = true;
-            python = pkgs.python312;
-            go = pkgs.go_1_23;
+            useLatestDefaults = true;
 
-            title = "NIX DEVSHELLS — DEFAULT";
+            java = true;
+            maven = true;
+            node = true;
+            pnpm = true;
+            yarn = true;
+            helm = true;
+            helmDocs = true;
+            python = true;
+            go = true;
+            kubectl = true;
+
+            title = "NIX DEVSHELLS — LATEST";
             issueUrl = "https://github.com/eduardocerqueira/nix-devshells/issues";
-            envVars = [ "GOPATH" ];
+            envVars = [ "JAVA_HOME" "GOPATH" ];
           };
         });
     };

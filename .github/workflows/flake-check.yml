@@ -12,6 +12,7 @@ jobs:
         flake:
           - lib
           - flakes/default
+          - flakes/latest
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

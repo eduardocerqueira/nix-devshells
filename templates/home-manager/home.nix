@@ -3,7 +3,7 @@
 {
   home.username = username;
   home.homeDirectory = homeDirectory;
-  home.stateVersion = "24.05";
+  home.stateVersion = "25.05";
 
   home.packages = with pkgs; [
     zsh-powerlevel10k
@@ -29,6 +29,7 @@
     enableCompletion = true;
     shellAliases = {
       nix-personal-default = "nix develop --profile ~/nix-workspace/personal-default ${nixDevshellsPath}/flakes/default -c zsh -i";
+      nix-personal-latest = "nix develop --profile ~/nix-workspace/personal-latest ${nixDevshellsPath}/flakes/latest -c zsh -i";
     };
     plugins = [
       {

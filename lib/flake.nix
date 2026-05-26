@@ -9,6 +9,7 @@
     lib = rec {
       mkDevShell = {
         system,
+        pkgs ? import nixpkgs { inherit system; config.allowUnfree = true; },
 
         # Languages: false = off, true = default package, or pass a package
         java ? false,
@@ -30,14 +31,45 @@
         shellHookExtra ? "",
         shellInitExtra ? "",
 
+        # When true, `java = true` etc. resolve to the newest package attrs in pkgs
+        useLatestDefaults ? false,
+
         graalvm ? false,
         graalvmHome ? null,
         graalvmHomeDarwin ? null,
         graalvmHomeLinux ? null,
       }:
       let
-        pkgs = import nixpkgs { inherit system; config.allowUnfree = true; };
         isLinux = builtins.match ".*-linux" system != null;
+
+        tryPkg = attr: fallback:
+          if builtins.hasAttr attr pkgs then pkgs.${attr} else fallback;
+
+        standardDefaults = {
+          java = pkgs.temurin-bin;
+          maven = pkgs.maven;
+          node = pkgs.nodejs;
+          pnpm = pkgs.pnpm;
+          helm = pkgs.kubernetes-helm;
+          helmDocs = pkgs.helm-docs;
+          python = pkgs.python3;
+          go = pkgs.go;
+          kubectl = pkgs.kubectl;
+        };
+
+        latestDefaults = {
+          java = tryPkg "temurin-bin-25" (tryPkg "temurin-bin-21" standardDefaults.java);
+          maven = standardDefaults.maven;
+          node = tryPkg "nodejs_latest" (tryPkg "nodejs_26" standardDefaults.node);
+          pnpm = standardDefaults.pnpm;
+          helm = standardDefaults.helm;
+          helmDocs = standardDefaults.helmDocs;
+          python = tryPkg "python314" (tryPkg "python313" standardDefaults.python);
+          go = standardDefaults.go;
+          kubectl = standardDefaults.kubectl;
+        };
+
+        defaults = if useLatestDefaults then latestDefaults else standardDefaults;
 
         resolve = enabled: defaultPkg: package:
           if package != false && package != null then
@@ -45,15 +77,21 @@
           else
             null;
 
-        resolvedJava = resolve java pkgs.temurin-bin-17 java;
-        resolvedMaven = resolve maven pkgs.maven maven;
-        resolvedNode = resolve node pkgs.nodejs_22 node;
-        resolvedPnpm = resolve pnpm pkgs.pnpm pnpm;
-        resolvedHelm = resolve helm pkgs.kubernetes-helm helm;
-        resolvedHelmDocs = resolve helmDocs pkgs.helm-docs helmDocs;
-        resolvedPython = resolve python pkgs.python312 python;
-        resolvedGo = resolve go pkgs.go go;
-        resolvedKubectl = resolve kubectl pkgs.kubectl kubectl;
+        resolvedJava = resolve java defaults.java java;
+        resolvedMaven = resolve maven defaults.maven maven;
+        resolvedNode = resolve node defaults.node node;
+        resolvedPnpm = resolve pnpm defaults.pnpm pnpm;
+        resolvedHelm = resolve helm defaults.helm helm;
+        resolvedHelmDocs = resolve helmDocs defaults.helmDocs helmDocs;
+        resolvedPython = resolve python defaults.python python;
+        resolvedGo = resolve go defaults.go go;
+        resolvedKubectl = resolve kubectl defaults.kubectl kubectl;
+
+        pythonPackagesFor = py:
+          let
+            packagesAttr = "python${builtins.replaceStrings ["."] [""] py.pythonVersion}Packages";
+          in
+            if builtins.hasAttr packagesAttr pkgs then pkgs.${packagesAttr} else pkgs.python3Packages;
 
         packages = builtins.filter (p: p != null) [
           resolvedJava
@@ -64,7 +102,7 @@
           resolvedHelm
           resolvedHelmDocs
           resolvedPython
-          (if resolvedPython != null then pkgs.python312Packages.pip else null)
+          (if resolvedPython != null then (pythonPackagesFor resolvedPython).pip else null)
           (if resolvedPython != null then pkgs.uv else null)
           resolvedGo
           (if resolvedGo != null then pkgs.gotools else null)
