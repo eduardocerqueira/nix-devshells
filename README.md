@@ -173,7 +173,7 @@ Tracks **`nixos-24.11`**. Python 3.12 with Hugging Face libraries pre-installed;
 |-------------|----------|
 | Local LLMs | Ollama (`OLLAMA_HOST`, `OLLAMA_MODELS` configured on enter) |
 | Python | 3.12 + uv + pip; `huggingface-hub`, `tokenizers`, `safetensors` |
-| Hugging Face | `huggingface-cli`; set `HF_TOKEN` for gated models |
+| Hugging Face | `hf` Hub CLI (`huggingface-hub` 1.x); set `HF_TOKEN` for gated models |
 | Media & storage | ffmpeg, git-lfs |
 
 Also includes the shared CLI bundle (gh, ripgrep, fd, bat, etc.).
