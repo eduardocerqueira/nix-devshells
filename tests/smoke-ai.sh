@@ -3,7 +3,7 @@
 set -euo pipefail
 
 echo "==> smoke-ai: core tools"
-for cmd in ollama uv ffmpeg huggingface-cli python; do
+for cmd in ollama uv ffmpeg hf python; do
   command -v "$cmd" >/dev/null
   echo "  ok: $cmd"
 done

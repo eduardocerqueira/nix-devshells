@@ -4,9 +4,11 @@
   inputs = {
     base.url = "path:../../lib";
     nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
+    # huggingface-hub 1.x ships the `hf` CLI (replaces deprecated huggingface-cli)
+    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixpkgs-unstable";
   };
 
-  outputs = { self, base, nixpkgs }:
+  outputs = { self, base, nixpkgs, nixpkgs-unstable }:
     let
       supportedSystems = [
         "aarch64-darwin"
@@ -18,6 +20,14 @@
       devShells = nixpkgs.lib.genAttrs supportedSystems (system:
         let
           pkgs = import nixpkgs { inherit system; config.allowUnfree = true; };
+          pkgsUnstable = import nixpkgs-unstable { inherit system; config.allowUnfree = true; };
+          huggingfaceHubCli = pkgsUnstable.python312Packages.huggingface-hub;
+          # Dev shell PYTHONPATH must not shadow the 1.x CLI module from nixpkgs-unstable.
+          hfCli = pkgs.writeShellScriptBin "hf" ''
+            export PYTHONNOUSERSITE=1
+            export PYTHONPATH="${huggingfaceHubCli}/${pkgs.python312.sitePackages}"
+            exec ${huggingfaceHubCli}/bin/hf "$@"
+          '';
           pythonAi = pkgs.python312.withPackages (ps: with ps; [
             huggingface-hub
             tokenizers
@@ -37,6 +47,7 @@
               ollama
               ffmpeg
               git-lfs
+              hfCli
             ];
 
             shellHookExtra = ''
@@ -61,7 +72,7 @@
                 echo "Hugging Face token detected (HF_TOKEN)"
               else
                 echo ""
-                echo "Tip: export HF_TOKEN for gated models — huggingface-cli login"
+                echo "Tip: export HF_TOKEN for gated models — hf auth login"
                 echo "  Heavy ML libs (torch, transformers, …): uv add transformers datasets accelerate"
                 echo ""
               fi
