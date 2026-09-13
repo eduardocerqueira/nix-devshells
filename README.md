@@ -8,20 +8,20 @@ A small Nix flake library (`mkDevShell`) plus ready-to-use development environme
 
 | Flake | Channel | What it provides |
 |-------|---------|------------------|
-| [`default`](./flakes/default/) | `nixos-24.11` (pinned) | General development — Node 20, Python 3.12, Go 1.23, pnpm, and common CLI tools |
-| [`latest`](./flakes/latest/) | `nixpkgs-unstable` | All optional languages and tools at the newest versions packaged in nixpkgs |
-| [`ai`](./flakes/ai/) | `nixos-24.11` (pinned) | AI / ML workflows — Ollama, Python 3.12 with Hugging Face libs, uv, ffmpeg, git-lfs |
-| [`devops`](./flakes/devops/) | `nixos-24.11` (pinned) | DevOps / SRE — Kubernetes, multi-cloud CLIs, OpenTofu, secrets, and platform utilities |
+| [`default`](./flakes/default/) | `nixos-26.05` (pinned) | General development — Node 22, Python 3.12, Go 1.25, pnpm, and common CLI tools |
+| [`latest`](./flakes/latest/) | `nixpkgs-unstable` | All optional languages and tools at the newest **stable** versions packaged in nixpkgs |
+| [`ai`](./flakes/ai/) | `nixos-26.05` (pinned) | AI / ML workflows — Ollama, Python 3.12 with Hugging Face libs, uv, ffmpeg, git-lfs |
+| [`devops`](./flakes/devops/) | `nixos-26.05` (pinned) | DevOps / SRE — Kubernetes, multi-cloud CLIs, OpenTofu, secrets, and platform utilities |
 
 ## Overview
 
 | Path | Description |
 |------|-------------|
 | [lib/](./lib/) | Shared `mkDevShell` function used by all flakes |
-| [flakes/default/](./flakes/default/) | **Pinned** shell on `nixos-24.11` (Node 20, Python 3.12, Go 1.23) |
+| [flakes/default/](./flakes/default/) | **Pinned** shell on `nixos-26.05` (Node 22, Python 3.12, Go 1.25) |
 | [flakes/latest/](./flakes/latest/) | **Latest** shell on `nixpkgs-unstable` (all tools enabled) |
-| [flakes/ai/](./flakes/ai/) | **AI / ML** shell on `nixos-24.11` (Ollama, Hugging Face, Python) |
-| [flakes/devops/](./flakes/devops/) | **DevOps / SRE** shell on `nixos-24.11` (k8s, cloud CLIs, IaC) |
+| [flakes/ai/](./flakes/ai/) | **AI / ML** shell on `nixos-26.05` (Ollama, Hugging Face, Python) |
+| [flakes/devops/](./flakes/devops/) | **DevOps / SRE** shell on `nixos-26.05` (k8s, cloud CLIs, IaC) |
 | [nix-shortcut.sh](./nix-shortcut.sh) | Sourceable shell shortcuts (`nix-ai`, `nix-latest`, …) — no Home Manager changes |
 | [templates/home-manager/](./templates/home-manager/) | Optional Home Manager template with `nix-personal-*` aliases |
 | [config/nix.conf](./config/nix.conf) | Minimal Nix settings (flakes enabled) |
@@ -126,28 +126,28 @@ To load shortcuts in every new terminal, add the `source` line to your `~/.zshrc
 
 ### `flakes/default` — pinned
 
-Tracks **`nixos-24.11`** (locked in `flake.lock`). Tool versions stay stable until you choose to update the lock file.
+Tracks **`nixos-26.05`** (locked in `flake.lock`). Tool versions stay stable until you choose to update the lock file.
 
 | Tool | Version (approx.) |
 |------|-------------------|
-| Node.js | 20.x |
+| Node.js | 22.x |
 | Python | 3.12 |
-| Go | 1.23 |
-| pnpm | from nixos-24.11 |
+| Go | 1.25 |
+| pnpm | from nixos-26.05 |
 
 Also includes: gh, docker, ripgrep, fd, bat, eza, fzf, delta, nixd, and other common CLI tools.
 
-### `flakes/latest` — newest in nixpkgs
+### `flakes/latest` — newest stable in nixpkgs
 
-Tracks **`nixpkgs-unstable`** with `useLatestDefaults = true`: each tool resolves to the highest version **packaged in nixpkgs** (not necessarily the same day as upstream releases).
+Tracks **`nixpkgs-unstable`** with `useLatestDefaults = true`: each tool resolves to the highest **stable** version packaged in nixpkgs (prereleases like Python `3.15.0rc2` are skipped). Example: Latest Stable Python → `3.14.7`.
 
-| Tool | Package attr | Typical version |
-|------|--------------|-----------------|
-| Java | `temurin-bin-25` | 25.x (Java 26 not yet in nixpkgs) |
-| Python | `python314` | 3.14.x |
+| Tool | Package attr | Latest stable (approx.) |
+|------|--------------|-------------------------|
+| Java | `temurin-bin-26` | 26.0.x |
+| Python | `python314` (skips `python315` while RC) | 3.14.7 |
 | Node.js | `nodejs_latest` | 26.x |
-| Go | `go` | latest in unstable |
-| Maven, pnpm, Helm, kubectl | defaults | latest in unstable |
+| Go | `go` | 1.26.x |
+| Maven, pnpm, Helm, kubectl | defaults | latest stable in unstable |
 
 All optional tools enabled: Java, Maven, Node, pnpm, Yarn, Python, Go, Helm, kubectl, and the shared CLI bundle.
 
@@ -163,16 +163,16 @@ After updating the flake, rebuild the profile (otherwise an old profile may keep
 nix develop --profile ~/nix-workspace/personal-latest /Users/eduardo/git/eduardo/nix-devshells/flakes/latest -c zsh -i
 ```
 
-**Note:** Nix only ships what is packaged in [nixpkgs](https://github.com/NixOS/nixpkgs). If upstream has Java 26 or Python 3.14.5 but nixpkgs has not merged those yet, the shell uses the newest available nixpkgs version (e.g. Temurin 25, Python 3.14.4).
+**Note:** Nix only ships what is packaged in [nixpkgs](https://github.com/NixOS/nixpkgs). `flakes/latest` always prefers the newest **final** release available there — not alphas, betas, or RCs.
 
 ### `flakes/ai` — AI / ML
 
-Tracks **`nixos-24.11`**. Python 3.12 with Hugging Face libraries pre-installed; heavy ML deps (torch, transformers, etc.) are added per-project via `uv`.
+Tracks **`nixos-26.05`**. Python 3.12 with Hugging Face libraries pre-installed; heavy ML deps (torch, transformers, etc.) are added per-project via `uv`.
 
 | Tool / area | Included |
 |-------------|----------|
 | Local LLMs | Ollama (`OLLAMA_HOST`, `OLLAMA_MODELS` configured on enter) |
-| Python | 3.12 + uv + pip; `huggingface-hub`, `tokenizers`, `safetensors` |
+| Python | 3.12 + uv + pip; `huggingface-hub` (`hf` CLI). Add tokenizers/torch/transformers via `uv` |
 | Hugging Face | `hf` Hub CLI (`huggingface-hub` 1.x); set `HF_TOKEN` for gated models |
 | Media & storage | ffmpeg, git-lfs |
 
@@ -180,7 +180,7 @@ Also includes the shared CLI bundle (gh, ripgrep, fd, bat, etc.).
 
 ### `flakes/devops` — DevOps / SRE
 
-Tracks **`nixos-24.11`**. Kubernetes-first shell with multi-cloud CLIs and infrastructure tooling.
+Tracks **`nixos-26.05`**. Kubernetes-first shell with multi-cloud CLIs and infrastructure tooling.
 
 | Tool / area | Included |
 |-------------|----------|
@@ -229,7 +229,7 @@ One Nix install serves all repos. Avoid conflicts by:
 {
   inputs = {
     base.url = "path:../../lib";
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11"; # or nixpkgs-unstable
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05"; # or nixpkgs-unstable
   };
 
   outputs = { base, nixpkgs }: {
@@ -253,19 +253,19 @@ Languages and tools are **opt-in** (`false` by default). Defaults resolve agains
 
 | Option | Default | When `true` |
 |--------|---------|-------------|
-| `java` | `false` | Temurin (`temurin-bin`, or `temurin-bin-25` with `useLatestDefaults`) |
+| `java` | `false` | Temurin (`temurin-bin`, or `temurin-bin-26` with `useLatestDefaults`) |
 | `maven` | `false` | Maven |
 | `node` | `false` | Node.js (`nodejs`, or `nodejs_latest` with `useLatestDefaults`) |
 | `pnpm` | `false` | pnpm |
 | `yarn` | `false` | Yarn |
-| `python` | `false` | Python 3 + pip + uv (`python3`, or `python314` with `useLatestDefaults`) |
+| `python` | `false` | Python 3 + pip + uv (`python3`, or latest stable e.g. `python314` / 3.14.7 with `useLatestDefaults`) |
 | `go` | `false` | Go + gotools |
 | `helm` | `false` | Kubernetes Helm |
 | `kubectl` | `false` | kubectl |
 
 Always included: ripgrep, fd, bat, eza, fzf, delta, gh, docker, nixd, and other common CLI tools.
 
-Pass a package instead of `true` to pin a specific version (e.g. `node = pkgs.nodejs_20`).
+Pass a package instead of `true` to pin a specific version (e.g. `node = pkgs.nodejs_22`).
 
 ## Updating
 

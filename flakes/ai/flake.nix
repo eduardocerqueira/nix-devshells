@@ -3,12 +3,10 @@
 
   inputs = {
     base.url = "path:../../lib";
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
-    # huggingface-hub 1.x ships the `hf` CLI (replaces deprecated huggingface-cli)
-    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
   };
 
-  outputs = { self, base, nixpkgs, nixpkgs-unstable }:
+  outputs = { self, base, nixpkgs }:
     let
       supportedSystems = [
         "aarch64-darwin"
@@ -20,18 +18,11 @@
       devShells = nixpkgs.lib.genAttrs supportedSystems (system:
         let
           pkgs = import nixpkgs { inherit system; config.allowUnfree = true; };
-          pkgsUnstable = import nixpkgs-unstable { inherit system; config.allowUnfree = true; };
-          huggingfaceHubCli = pkgsUnstable.python312Packages.huggingface-hub;
-          # Dev shell PYTHONPATH must not shadow the 1.x CLI module from nixpkgs-unstable.
-          hfCli = pkgs.writeShellScriptBin "hf" ''
-            export PYTHONNOUSERSITE=1
-            export PYTHONPATH="${huggingfaceHubCli}/${pkgs.python312.sitePackages}"
-            exec ${huggingfaceHubCli}/bin/hf "$@"
-          '';
+          # Keep the Python env light for CI/cache: nixpkgs builds of safetensors/
+          # tokenizers pull torch as a nativeBuildInput. Heavy ML belongs in
+          # project venvs via `uv`. huggingface-hub ships the `hf` CLI.
           pythonAi = pkgs.python312.withPackages (ps: with ps; [
             huggingface-hub
-            tokenizers
-            safetensors
           ]);
         in {
           default = base.lib.mkDevShell {
@@ -47,7 +38,6 @@
               ollama
               ffmpeg
               git-lfs
-              hfCli
             ];
 
             shellHookExtra = ''

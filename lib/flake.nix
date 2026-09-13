@@ -2,7 +2,7 @@
   description = "Reusable mkDevShell library for flake-based development environments";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
   };
 
   outputs = { self, nixpkgs }: {
@@ -31,7 +31,8 @@
         shellHookExtra ? "",
         shellInitExtra ? "",
 
-        # When true, `java = true` etc. resolve to the newest package attrs in pkgs
+        # When true, language toggles resolve to the newest *stable* packages in pkgs
+        # (skips prereleases such as Python 3.15.0rc2).
         useLatestDefaults ? false,
 
         graalvm ? false,
@@ -42,8 +43,26 @@
       let
         isLinux = builtins.match ".*-linux" system != null;
 
-        tryPkg = attr: fallback:
-          if builtins.hasAttr attr pkgs then pkgs.${attr} else fallback;
+        # Reject alpha / beta / rc / .dev versions so "latest" means latest stable.
+        isPreRelease = version:
+          builtins.match ".*(rc|alpha|beta|dev|[.]a[0-9]+|[.]b[0-9]+).*" version != null;
+
+        # First existing attr whose .version is a final (non-prerelease) release.
+        pickFirstStable = candidates: fallback:
+          if candidates == [] then fallback
+          else
+            let
+              attr = builtins.head candidates;
+              rest = builtins.tail candidates;
+              candidate =
+                if !(builtins.hasAttr attr pkgs) then null
+                else
+                  let
+                    pkg = pkgs.${attr};
+                    ver = pkg.version or "";
+                  in
+                    if ver == "" || isPreRelease ver then null else pkg;
+            in if candidate != null then candidate else pickFirstStable rest fallback;
 
         standardDefaults = {
           java = pkgs.temurin-bin;
@@ -57,14 +76,27 @@
           kubectl = pkgs.kubectl;
         };
 
+        # Highest numbered / newest attrs first; prereleases are skipped automatically.
         latestDefaults = {
-          java = tryPkg "temurin-bin-25" (tryPkg "temurin-bin-21" standardDefaults.java);
+          java = pickFirstStable [
+            "temurin-bin-26"
+            "temurin-bin-25"
+            "temurin-bin-21"
+          ] standardDefaults.java;
           maven = standardDefaults.maven;
-          node = tryPkg "nodejs_latest" (tryPkg "nodejs_26" standardDefaults.node);
+          node = pickFirstStable [
+            "nodejs_latest"
+            "nodejs_26"
+            "nodejs_24"
+          ] standardDefaults.node;
           pnpm = standardDefaults.pnpm;
           helm = standardDefaults.helm;
           helmDocs = standardDefaults.helmDocs;
-          python = tryPkg "python314" (tryPkg "python313" standardDefaults.python);
+          python = pickFirstStable [
+            "python315"
+            "python314"
+            "python313"
+          ] standardDefaults.python;
           go = standardDefaults.go;
           kubectl = standardDefaults.kubectl;
         };

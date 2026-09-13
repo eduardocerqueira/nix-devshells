@@ -1,9 +1,9 @@
 {
-  description = "General-purpose development environment (pinned nixos-24.11)";
+  description = "General-purpose development environment (pinned nixos-26.05)";
 
   inputs = {
     base.url = "path:../../lib";
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
   };
 
   outputs = { self, base, nixpkgs }:
@@ -22,10 +22,10 @@
           default = base.lib.mkDevShell {
             inherit system pkgs;
 
-            node = pkgs.nodejs_20;
+            node = pkgs.nodejs_22;
             pnpm = true;
             python = pkgs.python312;
-            go = pkgs.go_1_23;
+            go = pkgs.go_1_25;
 
             title = "NIX DEVSHELLS — DEFAULT";
             issueUrl = "https://github.com/eduardocerqueira/nix-devshells/issues";
