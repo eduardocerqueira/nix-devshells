@@ -3,7 +3,7 @@
 
   inputs = {
     base.url = "path:../../lib";
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
   };
 
   outputs = { self, base, nixpkgs }:

@@ -1,5 +1,5 @@
 {
-  description = "All tools on nixpkgs-unstable (latest versions)";
+  description = "All tools on nixpkgs-unstable (latest stable versions)";
 
   inputs = {
     base.url = "path:../../lib";
@@ -22,6 +22,7 @@
           default = base.lib.mkDevShell {
             inherit system pkgs;
 
+            # Latest *stable* packaged versions (skips RCs such as Python 3.15.0rc2).
             useLatestDefaults = true;
 
             java = true;
