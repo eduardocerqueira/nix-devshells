@@ -11,12 +11,13 @@ done
 echo "==> smoke-ai: Hugging Face Python stack"
 python - <<'PY'
 import huggingface_hub
-import safetensors
-import tokenizers
 
 print("  ok: huggingface_hub", huggingface_hub.__version__)
-print("  ok: tokenizers", tokenizers.__version__)
 PY
+
+echo "==> smoke-ai: hf CLI"
+hf --help >/dev/null
+echo "  ok: hf"
 
 echo "==> smoke-ai: media & model storage"
 command -v ffprobe >/dev/null && echo "  ok: ffprobe"

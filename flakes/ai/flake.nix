@@ -18,10 +18,11 @@
       devShells = nixpkgs.lib.genAttrs supportedSystems (system:
         let
           pkgs = import nixpkgs { inherit system; config.allowUnfree = true; };
+          # Keep the Python env light for CI/cache: nixpkgs builds of safetensors/
+          # tokenizers pull torch as a nativeBuildInput. Heavy ML belongs in
+          # project venvs via `uv`. huggingface-hub ships the `hf` CLI.
           pythonAi = pkgs.python312.withPackages (ps: with ps; [
             huggingface-hub
-            tokenizers
-            safetensors
           ]);
         in {
           default = base.lib.mkDevShell {
