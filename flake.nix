@@ -40,11 +40,16 @@
           unstable = pkgsFrom nixpkgs-unstable system;
           load = file: pkgs: import file { inherit pkgs mkDevShell; };
         in
-        {
-          default = load ./shells/default.nix stable;
-          latest = load ./shells/latest.nix unstable;
+        rec {
+          app = load ./shells/app.nix stable;
+          edge = load ./shells/edge.nix unstable;
           ai = load ./shells/ai.nix stable;
           devops = load ./shells/devops.nix stable;
+
+          # `devShells.<system>.default` is what a bare `nix develop` (and
+          # `nix develop github:eduardocerqueira/nix-devshells`) resolves to.
+          # Same derivation as `app`, just reachable without an attribute.
+          default = app;
         };
 
       # The whole directory, not individual files: the smoke tests source
@@ -84,8 +89,10 @@
               '';
         in
         {
-          smoke-default = smoke stable "default";
-          smoke-latest = smoke unstable "latest";
+          # No smoke-default: `default` is an alias of `app`, so it would
+          # rebuild the identical derivation under a second name.
+          smoke-app = smoke stable "app";
+          smoke-edge = smoke unstable "edge";
           smoke-ai = smoke stable "ai";
           smoke-devops = smoke stable "devops";
 

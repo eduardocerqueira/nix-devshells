@@ -14,7 +14,7 @@ mkDevShell {
 
   claudeCode = true;
 
-  title = "NIX DEVSHELLS — DEFAULT";
+  title = "NIX DEVSHELLS — APP";
   issueUrl = "https://github.com/eduardocerqueira/nix-devshells/issues";
   envVars = [ "GOPATH" ];
 }

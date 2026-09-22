@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-  # The `latest` shell tracks nixpkgs-unstable; without a schedule, upstream breakage
+  # The `edge` shell tracks nixpkgs-unstable; without a schedule, upstream breakage
   # is invisible until someone happens to push.
   schedule:
     - cron: "0 6 * * 1"
@@ -60,7 +60,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        shell: [default, latest, ai, devops]
+        shell: [app, edge, ai, devops]
     steps:
       - uses: actions/checkout@v7
 

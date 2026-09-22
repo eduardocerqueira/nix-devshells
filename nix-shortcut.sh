@@ -3,7 +3,7 @@
 #
 #   source ~/git/nix-devshells/nix-shortcut.sh
 #
-# Then run: nix-default | nix-latest | nix-ai | nix-devops
+# Then run: nix-app | nix-edge | nix-ai | nix-devops
 
 (return 0 2>/dev/null) || {
   echo "nix-shortcut.sh: source this file instead of running it:" >&2
@@ -32,12 +32,12 @@ _nix_devshell() {
     -c zsh -i
 }
 
-nix-default() { _nix_devshell default; }
-nix-latest()  { _nix_devshell latest; }
-nix-ai()      { _nix_devshell ai; }
-nix-devops()  { _nix_devshell devops; }
+nix-app()    { _nix_devshell app; }
+nix-edge()   { _nix_devshell edge; }
+nix-ai()     { _nix_devshell ai; }
+nix-devops() { _nix_devshell devops; }
 
 unset _nix_devshells_root
 
 echo "nix-devshells shortcuts loaded from $_NIX_DEVSHELLS_ROOT"
-echo "  nix-default  nix-latest  nix-ai  nix-devops"
+echo "  nix-app  nix-edge  nix-ai  nix-devops"

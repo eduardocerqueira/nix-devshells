@@ -6,14 +6,16 @@ A small Nix library (`mkDevShell`) plus ready-to-use development environments, e
 
 ## Shells
 
-One flake, four shells. Select with `#<name>`.
+One flake, four shells, named by what they are for. Select with `#<name>`.
 
 | Shell | Channel | What it provides |
 |-------|---------|------------------|
-| `default` | `nixos-26.05` (pinned) | General development — Node 24 (LTS), Python 3.13, Go 1.26, pnpm, and common CLI tools |
-| `latest` | `nixpkgs-unstable` | All optional languages and tools at the newest **stable** versions packaged in nixpkgs |
+| `app` | `nixos-26.05` (pinned) | Everyday application development — Node 24 (LTS), Python 3.13, Go 1.26, pnpm |
+| `edge` | `nixpkgs-unstable` | Every packaged language at the newest **stable** version — including the JVM |
 | `ai` | `nixos-26.05` (pinned) | AI / ML workflows — Ollama, Python 3.12 with Hugging Face, uv, ffmpeg, git-lfs |
-| `devops` | `nixos-26.05` (pinned) | DevOps / SRE — Kubernetes, multi-cloud CLIs, OpenTofu, secrets, and platform utilities |
+| `devops` | `nixos-26.05` (pinned) | DevOps / SRE — Kubernetes, AWS, OpenTofu, secrets, and platform utilities |
+
+`nix develop` with no attribute resolves to `app` — `devShells.<system>.default` is an alias for it, so bare `nix develop` and `nix develop github:eduardocerqueira/nix-devshells` keep working.
 
 ## Layout
 
@@ -21,9 +23,9 @@ One flake, four shells. Select with `#<name>`.
 |------|-------------|
 | [flake.nix](./flake.nix) | The flake — `devShells`, `checks`, `formatter`, and the exported `lib` |
 | [lib/default.nix](./lib/default.nix) | The shared `mkDevShell` builder (plain Nix, no inputs of its own) |
-| [shells/](./shells/) | One file per shell: [default](./shells/default.nix), [latest](./shells/latest.nix), [ai](./shells/ai.nix), [devops](./shells/devops.nix) |
+| [shells/](./shells/) | One file per shell: [app](./shells/app.nix), [edge](./shells/edge.nix), [ai](./shells/ai.nix), [devops](./shells/devops.nix) |
 | [tests/](./tests/) | Smoke tests, run both as flake `checks` and through `nix develop` in CI; shared assertions in [common.sh](./tests/common.sh) |
-| [nix-shortcut.sh](./nix-shortcut.sh) | Sourceable shell shortcuts (`nix-ai`, `nix-latest`, …) — no Home Manager changes |
+| [nix-shortcut.sh](./nix-shortcut.sh) | Sourceable shell shortcuts (`nix-app`, `nix-edge`, `nix-ai`, `nix-devops`) |
 | [templates/home-manager/](./templates/home-manager/) | Optional Home Manager template with `nix-personal-*` aliases |
 | [config/nix.conf](./config/nix.conf) | Minimal Nix settings (flakes enabled) |
 
@@ -53,7 +55,7 @@ Supported systems: `aarch64-darwin`, `x86_64-linux`, `aarch64-linux`. `x86_64-da
 nix develop github:eduardocerqueira/nix-devshells#ai
 ```
 
-Works for `#default`, `#latest`, `#ai`, and `#devops`.
+Works for `#app`, `#edge`, `#ai`, and `#devops`.
 
 ### From a checkout
 
@@ -66,10 +68,10 @@ cp ~/git/nix-devshells/config/nix.conf ~/.config/nix/nix.conf   # if flakes aren
 Enter a shell, persisting it as a profile so it survives garbage collection:
 
 ```sh
-nix develop --profile ~/nix-workspace/personal-default ~/git/nix-devshells#default -c zsh -i
-nix develop --profile ~/nix-workspace/personal-latest  ~/git/nix-devshells#latest  -c zsh -i
-nix develop --profile ~/nix-workspace/personal-ai      ~/git/nix-devshells#ai      -c zsh -i
-nix develop --profile ~/nix-workspace/personal-devops  ~/git/nix-devshells#devops  -c zsh -i
+nix develop --profile ~/nix-workspace/personal-app    ~/git/nix-devshells#app    -c zsh -i
+nix develop --profile ~/nix-workspace/personal-edge   ~/git/nix-devshells#edge   -c zsh -i
+nix develop --profile ~/nix-workspace/personal-ai     ~/git/nix-devshells#ai     -c zsh -i
+nix develop --profile ~/nix-workspace/personal-devops ~/git/nix-devshells#devops -c zsh -i
 ```
 
 On first run Nix builds the environment; later runs reuse the profile. Exit with `exit`.
@@ -77,7 +79,7 @@ On first run Nix builds the environment; later runs reuse the profile. Exit with
 Re-enter an existing profile without touching the flake:
 
 ```sh
-nix develop ~/nix-workspace/personal-default -c zsh -i
+nix develop ~/nix-workspace/personal-app -c zsh -i
 ```
 
 ### Shell shortcuts
@@ -89,10 +91,10 @@ source ~/git/nix-devshells/nix-shortcut.sh
 Then:
 
 ```sh
-nix-default   # pinned general dev
-nix-latest    # nixpkgs-unstable
-nix-ai        # AI / ML
-nix-devops    # DevOps / SRE
+nix-app      # everyday application dev (pinned)
+nix-edge     # every language, newest stable (unstable channel)
+nix-ai       # AI / ML
+nix-devops   # DevOps / SRE
 ```
 
 The script resolves the repo path automatically. Override with `NIX_DEVSHELLS_ROOT` or `NIX_DEVSHELLS_WORKSPACE`. To load shortcuts in every terminal, add the `source` line to `~/.zshrc` (or `~/.bashrc`).
@@ -108,7 +110,7 @@ direnv allow
 
 ## Available shells
 
-### `default` — pinned
+### `app` — everyday development
 
 Tracks **`nixos-26.05`** (locked in `flake.lock`). Versions stay put until you update the lock.
 
@@ -121,7 +123,7 @@ Tracks **`nixos-26.05`** (locked in `flake.lock`). Versions stay put until you u
 
 Also includes the [shared bundle](#the-shared-bundle).
 
-### `latest` — newest stable in nixpkgs
+### `edge` — newest stable in nixpkgs
 
 Tracks **`nixpkgs-unstable`** with `useLatestDefaults = true`: each tool resolves to the highest **stable** version packaged in nixpkgs. Prereleases are skipped, so while Python 3.15 is at RC the shell gives you 3.14.
 
@@ -135,7 +137,7 @@ Tracks **`nixpkgs-unstable`** with `useLatestDefaults = true`: each tool resolve
 | Helm | `kubernetes-helm` | **4.x** — note the major bump vs. the pinned shells' Helm 3 |
 | Maven, pnpm, kubectl | defaults | latest stable in unstable |
 
-**Note:** Nix only ships what is packaged in [nixpkgs](https://github.com/NixOS/nixpkgs). `latest` always prefers the newest **final** release available there — not alphas, betas, or RCs.
+**Note:** Nix only ships what is packaged in [nixpkgs](https://github.com/NixOS/nixpkgs). `edge` always prefers the newest **final** release available there — not alphas, betas, or RCs.
 
 ### `ai` — AI / ML
 
@@ -182,7 +184,7 @@ cp templates/home-manager/*.nix ~/.config/home-manager/
 home-manager switch --flake ~/.config/home-manager#YOUR_USER
 ```
 
-Then use `nix-personal-default`, `nix-personal-latest`, `nix-personal-ai`, or `nix-personal-devops`.
+Then use `nix-personal-app`, `nix-personal-edge`, `nix-personal-ai`, or `nix-personal-devops`.
 
 See [templates/home-manager/README.md](./templates/home-manager/README.md) for coexistence notes.
 
@@ -190,7 +192,7 @@ See [templates/home-manager/README.md](./templates/home-manager/README.md) for c
 
 One Nix install serves all repos. Avoid conflicts by:
 
-- **Separate profile names** — `personal-default`, `personal-latest`, … vs work profiles in `~/nix-workspace/`
+- **Separate profile names** — `personal-app`, `personal-edge`, … vs work profiles in `~/nix-workspace/`
 - **Separate alias prefixes** — `nix-personal-*` vs work aliases
 - **Git identity via `includeIf`** — don't rely on switching Home Manager for work vs personal email
 
@@ -274,7 +276,7 @@ The Nix and shell groups exist so this repo's own CI lint pass is reproducible f
 
 **`claudeCode` is off by default and on in all four shells here.** The package is unfree, and forcing its output path without `config.allowUnfree = true` throws — so enabling it unconditionally in the library would break any consumer that has not opted in. Enable it with `claudeCode = true;` and an unfree-permitting `pkgs`.
 
-The nixpkgs wrapper sets `DISABLE_AUTOUPDATER=1`, so `claude` will **not** update itself in these shells; it moves with the channel. The pinned shells therefore lag `latest` by whatever the channel lag is (2.1.223 vs 2.1.278 at the time of writing). Run `nix flake update nixpkgs` to pick up a newer one.
+The nixpkgs wrapper sets `DISABLE_AUTOUPDATER=1`, so `claude` will **not** update itself in these shells; it moves with the channel. The pinned shells therefore lag `edge` by whatever the channel lag is (2.1.223 vs 2.1.278 at the time of writing). Run `nix flake update nixpkgs` to pick up a newer one.
 
 **`autoVenv` is off by default.** It writes a `.venv/` into whatever directory you enter the shell from, which surprises `uv`-managed projects. Turn it on per shell if you want the old behaviour.
 
@@ -285,7 +287,7 @@ The nixpkgs wrapper sets `DISABLE_AUTOUPDATER=1`, so `claude` will **not** updat
 ```sh
 cd ~/git/nix-devshells
 nix flake update                    # both nixpkgs inputs
-nix flake update nixpkgs-unstable   # just the `latest` shell's channel
+nix flake update nixpkgs-unstable   # just the `edge` shell's channel
 nix flake update nixpkgs            # just the pinned channel
 ```
 
@@ -309,10 +311,10 @@ nix fmt                           # format all .nix files (nixfmt)
 Run one smoke test against a real shell (this also exercises the `shellHook`):
 
 ```sh
-nix develop .#default --command bash tests/smoke-default.sh
-nix develop .#latest  --command bash tests/smoke-latest.sh
-nix develop .#ai      --command bash tests/smoke-ai.sh
-nix develop .#devops  --command bash tests/smoke-devops.sh
+nix develop .#app    --command bash tests/smoke-app.sh
+nix develop .#edge   --command bash tests/smoke-edge.sh
+nix develop .#ai     --command bash tests/smoke-ai.sh
+nix develop .#devops --command bash tests/smoke-devops.sh
 ```
 
 ## CI
@@ -321,11 +323,11 @@ GitHub Actions ([`.github/workflows/ci.yml`](./.github/workflows/ci.yml)) runs o
 
 | Job | What it checks |
 |-----|----------------|
-| **flake check** | `nix flake check --all-systems --no-build` on Linux **and** macOS |
+| **flake check** | `nix flake check --all-systems --no-build` on Linux **and** macOS, plus the `format` and `shellcheck` checks |
 | **smoke test** | Each of the four shells entered via `nix develop` on Linux **and** macOS |
-| **shellcheck** | All scripts in `tests/` plus `nix-shortcut.sh` |
 
-The weekly schedule exists because `latest` tracks `nixpkgs-unstable`: without it, upstream breakage would only surface the next time someone pushed.
+
+The weekly schedule exists because `edge` tracks `nixpkgs-unstable`: without it, upstream breakage would only surface the next time someone pushed.
 
 To require CI before merge, enable branch protection on `main` and select these checks in repository settings.
 

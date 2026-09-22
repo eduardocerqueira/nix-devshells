@@ -23,7 +23,7 @@ mkDevShell {
 
   claudeCode = true;
 
-  title = "NIX DEVSHELLS — LATEST";
+  title = "NIX DEVSHELLS — EDGE";
   issueUrl = "https://github.com/eduardocerqueira/nix-devshells/issues";
   envVars = [
     "JAVA_HOME"

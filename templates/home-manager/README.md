@@ -16,7 +16,7 @@ home-manager switch --flake ~/.config/home-manager#YOUR_USER
 This adds four aliases, one per shell:
 
 ```sh
-nix-personal-default   nix-personal-latest   nix-personal-ai   nix-personal-devops
+nix-personal-app   nix-personal-edge   nix-personal-ai   nix-personal-devops
 ```
 
 Each one is `nix develop --profile ~/nix-workspace/personal-<name> <repo>#<name> -c zsh -i`.
@@ -25,5 +25,5 @@ If you would rather not touch your Home Manager config, source
 
 ## Coexistence with other Nix repos
 
-Use separate profile names under `~/nix-workspace/` (e.g. `personal-default` vs work profiles).
+Use separate profile names under `~/nix-workspace/` (e.g. `personal-app` vs work profiles).
 For git identity, prefer conditional config with `includeIf` instead of switching Home Manager.
