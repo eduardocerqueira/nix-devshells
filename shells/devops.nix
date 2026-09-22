@@ -52,6 +52,9 @@ mkDevShell {
       helmfile
       fluxcd
       argocd
+      kustomize
+      kubeconform # validates raw manifests; helm/helmfile do not
+      kind # throwaway local clusters
 
       # Cloud CLIs
       cloudflared
@@ -70,6 +73,8 @@ mkDevShell {
       trivy
       checkov
       step-cli
+      terraform-docs
+      cosign # trivy scans, cosign signs/verifies
 
       # SRE / platform utilities
       dive
@@ -77,7 +82,6 @@ mkDevShell {
       grpcurl
       httpie
       yq-go
-      direnv
       actionlint
       pre-commit
     ]);

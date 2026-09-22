@@ -2,11 +2,15 @@
 # Smoke test for the `latest` shell (nixpkgs-unstable, latest *stable* defaults).
 set -euo pipefail
 
-echo "==> smoke-latest: checking required commands"
-for cmd in java mvn node npm pnpm yarn python go helm kubectl git gh claude docker nixd; do
-  command -v "$cmd" >/dev/null
-  echo "  ok: $cmd"
-done
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source-path=SCRIPTDIR
+source "$SCRIPT_DIR/common.sh"
+
+echo "==> smoke-latest: shared bundle"
+require_commands "${SHARED_TOOLS[@]}"
+
+echo "==> smoke-latest: shell-specific tools"
+require_commands java mvn node npm pnpm yarn python go helm kubectl helm-docs
 
 echo "==> smoke-latest: reported versions"
 node_ver="$(node --version)"

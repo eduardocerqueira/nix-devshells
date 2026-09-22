@@ -22,7 +22,7 @@ One flake, four shells. Select with `#<name>`.
 | [flake.nix](./flake.nix) | The flake — `devShells`, `checks`, `formatter`, and the exported `lib` |
 | [lib/default.nix](./lib/default.nix) | The shared `mkDevShell` builder (plain Nix, no inputs of its own) |
 | [shells/](./shells/) | One file per shell: [default](./shells/default.nix), [latest](./shells/latest.nix), [ai](./shells/ai.nix), [devops](./shells/devops.nix) |
-| [tests/](./tests/) | Smoke tests, run both as flake `checks` and through `nix develop` in CI |
+| [tests/](./tests/) | Smoke tests, run both as flake `checks` and through `nix develop` in CI; shared assertions in [common.sh](./tests/common.sh) |
 | [nix-shortcut.sh](./nix-shortcut.sh) | Sourceable shell shortcuts (`nix-ai`, `nix-latest`, …) — no Home Manager changes |
 | [templates/home-manager/](./templates/home-manager/) | Optional Home Manager template with `nix-personal-*` aliases |
 | [config/nix.conf](./config/nix.conf) | Minimal Nix settings (flakes enabled) |
@@ -119,7 +119,7 @@ Tracks **`nixos-26.05`** (locked in `flake.lock`). Versions stay put until you u
 | Go | 1.26 |
 | pnpm | from nixos-26.05 |
 
-Also includes the shared bundle: Claude Code, git, gh, docker, ripgrep, fd, bat, eza, fzf, delta, nixd, and other common CLI tools.
+Also includes the [shared bundle](#the-shared-bundle).
 
 ### `latest` — newest stable in nixpkgs
 
@@ -154,10 +154,10 @@ Tracks **`nixos-26.05`**. Kubernetes-first shell with multi-cloud CLIs and infra
 
 | Tool / area | Included |
 |-------------|----------|
-| Kubernetes | kubectl, helm, k9s, kubectx, stern, kubecolor, helmfile, fluxcd, argocd |
+| Kubernetes | kubectl, helm, k9s, kubectx, stern, kubecolor, helmfile, fluxcd, argocd, kustomize, kubeconform, kind |
 | Cloud CLIs | AWS, Azure, GCP, Cloudflare (`cloudflared`, `wrangler`) |
-| IaC & secrets | OpenTofu (`terraform` wrapper), sops, age, tflint, **trivy**, checkov, step-cli |
-| SRE utilities | dive, lazydocker, grpcurl, httpie, yq, direnv, actionlint, pre-commit |
+| IaC & secrets | OpenTofu (`terraform` wrapper), sops, age, tflint, trivy, cosign, checkov, step-cli, terraform-docs |
+| SRE utilities | dive, lazydocker, grpcurl, httpie, yq, actionlint, pre-commit |
 
 Shortcuts `k`, `kns`, `kgp`, `kgpa` and the `terraform` → `tofu` wrapper are real packages in the shell's closure, so they work under any shell and leave nothing behind in `/tmp`.
 
@@ -254,7 +254,23 @@ Pass a package instead of `true` to pin a version (e.g. `node = pkgs.nodejs_22`)
 | `useLatestDefaults` | `false` | Resolve toggles to the newest *stable* packages in `pkgs` |
 | `graalvm`, `graalvmHome*` | `false` / `null` | GraalVM `GRAALVM_HOME` wiring |
 
-Always included: git, gh, ripgrep, fd, bat, eza, fzf, delta, docker, nixd, and other common CLI tools.
+### The shared bundle
+
+Every shell gets these regardless of toggles:
+
+| Group | Tools |
+|-------|-------|
+| Git | git, gh, git-filter-repo, lazygit, difftastic (`difft`), gitleaks |
+| AI | Claude Code (`claude`) |
+| Nix | nixd (LSP), nixfmt, statix, deadnix |
+| Shell | shellcheck, shfmt |
+| Workflow | direnv, just, docker |
+| Search & files | ripgrep, fd, bat, eza, fzf, delta, tree, jq, curl, wget |
+| System | htop, tldr, dust, duf, make, gnupg, pkg-config |
+
+The Nix and shell groups exist so this repo's own CI lint pass is reproducible from inside any shell — `nixfmt`, `statix`, `deadnix`, `shellcheck` and `shfmt` are exactly what CI runs. They add ~800 MiB of closure across all shells.
+
+`openssh` is deliberately **not** included: nixpkgs' ssh lacks Apple's `UseKeychain` option, so shadowing `/usr/bin/ssh` breaks macOS `~/.ssh/config` files that use it.
 
 **`claudeCode` is off by default and on in all four shells here.** The package is unfree, and forcing its output path without `config.allowUnfree = true` throws — so enabling it unconditionally in the library would break any consumer that has not opted in. Enable it with `claudeCode = true;` and an unfree-permitting `pkgs`.
 

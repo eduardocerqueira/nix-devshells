@@ -2,11 +2,15 @@
 # Smoke test for the `ai` shell (local LLMs, Python, Hugging Face).
 set -euo pipefail
 
-echo "==> smoke-ai: core tools"
-for cmd in ollama uv ffmpeg ffprobe hf python git git-lfs claude; do
-  command -v "$cmd" >/dev/null
-  echo "  ok: $cmd"
-done
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source-path=SCRIPTDIR
+source "$SCRIPT_DIR/common.sh"
+
+echo "==> smoke-ai: shared bundle"
+require_commands "${SHARED_TOOLS[@]}"
+
+echo "==> smoke-ai: shell-specific tools"
+require_commands ollama uv ffmpeg ffprobe hf python git-lfs
 
 echo "==> smoke-ai: Hugging Face Python stack"
 python - <<'PY'

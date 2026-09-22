@@ -185,8 +185,25 @@ let
       pkgs.git
       pkgs.gh
       pkgs.git-filter-repo
+      pkgs.lazygit
+      pkgs.difftastic # binary is `difft`
+      pkgs.gitleaks
+
       pkgs.docker
+
+      # Nix tooling. nixd is an LSP, not a formatter — `nix fmt` in this repo
+      # needs nixfmt, and statix/deadnix are what a Nix lint pass actually uses.
       pkgs.nixd
+      pkgs.nixfmt
+      pkgs.statix
+      pkgs.deadnix
+
+      # Shell tooling, so the repo's own CI lint pass is reproducible locally.
+      pkgs.shellcheck
+      pkgs.shfmt
+
+      pkgs.direnv
+      pkgs.just
 
       (if isLinux then pkgs.glibcLocales else null)
     ]

@@ -88,4 +88,4 @@ jobs:
       - uses: DeterminateSystems/magic-nix-cache-action@v15
 
       - name: shellcheck
-        run: nix run nixpkgs#shellcheck -- tests/*.sh nix-shortcut.sh
+        run: nix run nixpkgs#shellcheck -- -x tests/*.sh nix-shortcut.sh

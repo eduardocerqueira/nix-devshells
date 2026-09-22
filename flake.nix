@@ -47,12 +47,9 @@
           devops = load ./shells/devops.nix stable;
         };
 
-      smokeScripts = {
-        default = ./tests/smoke-default.sh;
-        latest = ./tests/smoke-latest.sh;
-        ai = ./tests/smoke-ai.sh;
-        devops = ./tests/smoke-devops.sh;
-      };
+      # The whole directory, not individual files: the smoke tests source
+      # tests/common.sh, which has to land in the store beside them.
+      testsDir = ./tests;
     in
     {
       # Consumers: inputs.nix-devshells.lib.mkDevShell { pkgs = ...; node = true; }
@@ -82,7 +79,7 @@
                 mkdir -p "$HOME"
                 export CHECKPOINT_DISABLE=1
                 export DO_NOT_TRACK=1
-                bash ${smokeScripts.${name}}
+                bash ${testsDir}/smoke-${name}.sh
                 touch "$out"
               '';
         in
