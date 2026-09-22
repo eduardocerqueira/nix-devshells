@@ -17,6 +17,9 @@
   helmDocs ? false,
   python ? false,
   go ? false,
+  # goimports/godoc etc. Opt-in: 240 MiB for tooling most projects get from
+  # their editor's gopls instead.
+  goTools ? false,
   kubectl ? false,
 
   # Claude Code. Off by default because the package is unfree: forcing its
@@ -154,7 +157,7 @@ let
       (if resolvedPython != null then (pythonPackagesFor resolvedPython).pip else null)
       (if resolvedPython != null then pkgs.uv else null)
       resolvedGo
-      (if resolvedGo != null then pkgs.gotools else null)
+      (if resolvedGo != null && goTools then pkgs.gotools else null)
       resolvedKubectl
 
       pkgs.gnumake
@@ -186,7 +189,6 @@ let
       pkgs.gh
       pkgs.git-filter-repo
       pkgs.lazygit
-      pkgs.difftastic # binary is `difft`
       pkgs.gitleaks
 
       pkgs.docker
@@ -198,8 +200,8 @@ let
       pkgs.statix
       pkgs.deadnix
 
-      # Shell tooling, so the repo's own CI lint pass is reproducible locally.
-      pkgs.shellcheck
+      # shfmt only: shellcheck drags in a ~120 MiB Haskell runtime, and this
+      # repo lints its own scripts through `nix flake check` instead.
       pkgs.shfmt
 
       pkgs.direnv

@@ -14,17 +14,25 @@ require_commands kubectl helm k9s kubectx stern kubecolor helmfile flux argocd \
   kustomize kubeconform kind
 
 echo "==> smoke-devops: Cloud CLIs"
-require_commands cloudflared wrangler aws az gcloud
+require_commands cloudflared wrangler aws
 
 echo "==> smoke-devops: Infrastructure & secrets"
-require_commands tofu terraform sops age tflint trivy checkov step terraform-docs cosign
+require_commands tofu terraform sops age tflint trivy step terraform-docs cosign
 
-echo "==> smoke-devops: tfsec is retired in favour of trivy"
-if command -v tfsec >/dev/null 2>&1; then
-  echo "error: tfsec is end-of-life upstream and should not be shipped" >&2
-  exit 1
-fi
-echo "  ok: tfsec absent"
+echo "==> smoke-devops: retired / superseded scanners are not shipped"
+# tfsec is end-of-life upstream ("Tfsec is now part of Trivy"); checkov was
+# dropped because `trivy config` covers the same IaC misconfiguration scanning
+# and checkov dragged in igraph -> arpack -> gfortran (~400 MiB).
+for dead in tfsec checkov; do
+  if command -v "$dead" >/dev/null 2>&1; then
+    echo "error: $dead should not be shipped — use trivy" >&2
+    exit 1
+  fi
+  echo "  ok: $dead absent"
+done
+
+echo "==> smoke-devops: the heavy tools that live only here"
+require_commands shellcheck difft
 
 echo "==> smoke-devops: SRE utilities"
 require_commands dive lazydocker grpcurl http yq actionlint pre-commit

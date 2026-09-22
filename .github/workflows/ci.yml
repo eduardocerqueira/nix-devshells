@@ -44,10 +44,10 @@ jobs:
       # --no-build above evaluates the checks without running them; formatting
       # is cheap enough to actually build. The smoke checks are covered by the
       # smoke-test job, which also exercises the shellHook.
-      - name: nixfmt
+      - name: nixfmt + shellcheck
         run: |
           system="$(nix eval --raw --impure --expr builtins.currentSystem)"
-          nix build -L ".#checks.$system.format"
+          nix build -L ".#checks.$system.format" ".#checks.$system.shellcheck"
 
   smoke-test:
     name: smoke — ${{ matrix.shell }} on ${{ matrix.os }}
@@ -72,20 +72,3 @@ jobs:
       # cover the same scripts against the package set alone.
       - name: Run smoke test inside dev shell
         run: nix develop ".#${{ matrix.shell }}" --command bash "tests/smoke-${{ matrix.shell }}.sh"
-
-  shellcheck:
-    name: shellcheck
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: DeterminateSystems/nix-installer-action@v23
-
-      - uses: DeterminateSystems/magic-nix-cache-action@v15
-
-      - name: shellcheck
-        run: nix run nixpkgs#shellcheck -- -x tests/*.sh nix-shortcut.sh

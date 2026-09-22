@@ -89,6 +89,18 @@
           smoke-ai = smoke stable "ai";
           smoke-devops = smoke stable "devops";
 
+          # shellcheck is not in the shells any more (Haskell runtime), so the
+          # repo lints itself here instead: `nix flake check` covers it.
+          shellcheck =
+            stable.runCommand "check-shellcheck"
+              {
+                nativeBuildInputs = [ stable.shellcheck ];
+              }
+              ''
+                shellcheck -x ${testsDir}/*.sh ${self}/nix-shortcut.sh
+                touch "$out"
+              '';
+
           format =
             stable.runCommand "check-nixfmt"
               {

@@ -5,11 +5,11 @@
 # Kept here so the four smoke tests cannot drift apart.
 # shellcheck disable=SC2034  # consumed by the scripts that source this file
 SHARED_TOOLS=(
-  git gh git-filter-repo lazygit difft gitleaks
+  git gh git-filter-repo lazygit gitleaks
   claude
   docker
   nixd nixfmt statix deadnix
-  shellcheck shfmt
+  shfmt
   direnv just
   rg fd bat eza fzf jq delta tree curl wget htop tldr dust duf
   make gpg pkg-config

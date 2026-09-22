@@ -56,12 +56,11 @@ mkDevShell {
       kubeconform # validates raw manifests; helm/helmfile do not
       kind # throwaway local clusters
 
-      # Cloud CLIs
+      # Cloud CLIs. Azure and GCP CLIs are deliberately absent (~750 MiB for
+      # clouds this shell's owner does not use); add them back per-project.
       cloudflared
       wrangler
       awscli2
-      azure-cli
-      google-cloud-sdk
 
       # Infrastructure as Code & secrets
       opentofu
@@ -71,12 +70,13 @@ mkDevShell {
       # tfsec is end-of-life upstream ("Tfsec is now part of Trivy") — Trivy is
       # its maintained successor and also covers images, SBOMs and secrets.
       trivy
-      checkov
       step-cli
       terraform-docs
       cosign # trivy scans, cosign signs/verifies
 
       # SRE / platform utilities
+      shellcheck # heavy (Haskell); kept here rather than in every shell
+      difftastic # binary is `difft`
       dive
       lazydocker
       grpcurl

@@ -21,20 +21,23 @@ echo "==> smoke-default: claude actually runs (not just present on PATH)"
 claude --version | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+ \(Claude Code\)'
 echo "  ok: claude $(claude --version)"
 
-echo "==> smoke-default: the lint tools this repo's CI depends on actually run"
+echo "==> smoke-default: the lint tools actually run"
 nixfmt --version >/dev/null
 deadnix --version >/dev/null
-shellcheck --version >/dev/null
 shfmt --version >/dev/null
 just --version >/dev/null
-difft --version >/dev/null
 gitleaks version >/dev/null 2>&1
 statix --help >/dev/null # statix has no --version, only subcommands
-echo "  ok: nixfmt / statix / deadnix / shellcheck / shfmt / just / difft / gitleaks"
+echo "  ok: nixfmt / statix / deadnix / shfmt / just / gitleaks"
+
+echo "==> smoke-default: heavy tools stay out of the everyday shells"
+# These live in the devops shell only: ShellCheck brings a Haskell runtime
+# and difftastic is ~120 MiB. gotools is opt-in via the goTools flag.
+assert_not_from_shell shellcheck difft goimports
 
 echo "==> smoke-default: shell closure contains exactly what it should"
 # git and claude are the ones that would quietly fall through to a host copy.
-assert_from_shell node git claude shellcheck nixfmt
+assert_from_shell node git claude nixfmt
 # `default` enables neither helm nor kubectl nor maven.
 assert_not_from_shell helm kubectl mvn
 
