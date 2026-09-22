@@ -152,18 +152,25 @@ Tracks **`nixos-26.05`**. Python 3.12 with Hugging Face libraries; heavy ML deps
 
 ### `devops` — DevOps / SRE
 
-Tracks **`nixos-26.05`**. Kubernetes-first shell with multi-cloud CLIs and infrastructure tooling.
+Tracks **`nixos-26.05`**. Kubernetes-first shell with cloud CLIs and infrastructure tooling.
 
 | Tool / area | Included |
 |-------------|----------|
 | Kubernetes | kubectl, helm, k9s, kubectx, stern, kubecolor, helmfile, fluxcd, argocd, kustomize, kubeconform, kind |
-| Cloud CLIs | AWS, Azure, GCP, Cloudflare (`cloudflared`, `wrangler`) |
-| IaC & secrets | OpenTofu (`terraform` wrapper), sops, age, tflint, trivy, cosign, checkov, step-cli, terraform-docs |
+| Cloud CLIs | AWS, Cloudflare (`cloudflared`, `wrangler`) |
+| IaC & secrets | OpenTofu (`terraform` wrapper), sops, age, tflint, trivy, cosign, step-cli, terraform-docs |
 | SRE utilities | dive, lazydocker, grpcurl, httpie, yq, actionlint, pre-commit |
+| Heavy tools kept here only | shellcheck (Haskell runtime), difftastic (`difft`) |
 
 Shortcuts `k`, `kns`, `kgp`, `kgpa` and the `terraform` → `tofu` wrapper are real packages in the shell's closure, so they work under any shell and leave nothing behind in `/tmp`.
 
-`tfsec` is **not** included: it is end-of-life upstream ("Tfsec is now part of Trivy"). Use `trivy config .` in its place.
+Three things are deliberately **absent**:
+
+- **`tfsec`** — end-of-life upstream ("Tfsec is now part of Trivy"). Use `trivy config .`.
+- **`checkov`** — superseded by `trivy config`, and it pulled `igraph` → `arpack` → `gfortran`, i.e. ~400 MiB including a Fortran compiler.
+- **`azure-cli` and `google-cloud-sdk`** — ~750 MiB for clouds this shell's owner does not use. Add them per-project if you need them.
+
+`wrangler` is large (~1.9 GiB) for reasons outside this repo: the nixpkgs derivation ships the whole `workers-sdk` pnpm workspace, including 43 copies of typescript and 7 of `workerd`.
 
 ## Environment variables
 
@@ -238,7 +245,8 @@ Languages and tools are **opt-in** (`false` by default) and resolve against the 
 | `pnpm` | `false` | pnpm |
 | `yarn` | `false` | Yarn Classic (or `yarn-berry` 4.x with `useLatestDefaults`) |
 | `python` | `false` | Python 3 + pip + uv |
-| `go` | `false` | Go + gotools |
+| `go` | `false` | Go toolchain |
+| `goTools` | `false` | `gotools` (`goimports`, `godoc`) — 240 MiB, so opt-in; requires `go` |
 | `helm` / `helmDocs` | `false` | Kubernetes Helm / helm-docs |
 | `kubectl` | `false` | kubectl |
 | `claudeCode` | `false` | Claude Code (`claude`) — **unfree**, see below |
@@ -262,15 +270,17 @@ Every shell gets these regardless of toggles:
 
 | Group | Tools |
 |-------|-------|
-| Git | git, gh, git-filter-repo, lazygit, difftastic (`difft`), gitleaks |
+| Git | git, gh, git-filter-repo, lazygit, gitleaks |
 | AI | Claude Code (`claude`) |
 | Nix | nixd (LSP), nixfmt, statix, deadnix |
-| Shell | shellcheck, shfmt |
+| Shell | shfmt |
 | Workflow | direnv, just, docker |
 | Search & files | ripgrep, fd, bat, eza, fzf, delta, tree, jq, curl, wget |
 | System | htop, tldr, dust, duf, make, gnupg, pkg-config |
 
-The Nix and shell groups exist so this repo's own CI lint pass is reproducible from inside any shell — `nixfmt`, `statix`, `deadnix`, `shellcheck` and `shfmt` are exactly what CI runs. They add ~800 MiB of closure across all shells.
+The Nix group exists so this repo's own lint pass is reproducible from inside any shell — `nixfmt`, `statix` and `deadnix` are what CI runs. `nixd` and `nixfmt` are the largest at 37 MiB and 33 MiB of closure.
+
+`shellcheck` is **not** in the bundle: it brings a ~120 MiB Haskell runtime into every shell. The repo lints its own scripts through `checks.<system>.shellcheck` instead, so `nix flake check` still covers them and only `devops` carries the binary. `difftastic` moved to `devops` for the same reason (119 MiB).
 
 `openssh` is deliberately **not** included: nixpkgs' ssh lacks Apple's `UseKeychain` option, so shadowing `/usr/bin/ssh` breaks macOS `~/.ssh/config` files that use it.
 
