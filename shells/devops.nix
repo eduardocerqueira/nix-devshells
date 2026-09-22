@@ -30,6 +30,8 @@ mkDevShell {
   helm = true;
   kubectl = true;
 
+  claudeCode = true;
+
   title = "NIX DEVSHELLS — DEVOPS";
   issueUrl = "https://github.com/eduardocerqueira/nix-devshells/issues";
   envVars = [

@@ -119,7 +119,7 @@ Tracks **`nixos-26.05`** (locked in `flake.lock`). Versions stay put until you u
 | Go | 1.26 |
 | pnpm | from nixos-26.05 |
 
-Also includes: gh, docker, ripgrep, fd, bat, eza, fzf, delta, nixd, and other common CLI tools.
+Also includes the shared bundle: Claude Code, git, gh, docker, ripgrep, fd, bat, eza, fzf, delta, nixd, and other common CLI tools.
 
 ### `latest` — newest stable in nixpkgs
 
@@ -239,6 +239,7 @@ Languages and tools are **opt-in** (`false` by default) and resolve against the 
 | `go` | `false` | Go + gotools |
 | `helm` / `helmDocs` | `false` | Kubernetes Helm / helm-docs |
 | `kubectl` | `false` | kubectl |
+| `claudeCode` | `false` | Claude Code (`claude`) — **unfree**, see below |
 
 Pass a package instead of `true` to pin a version (e.g. `node = pkgs.nodejs_22`).
 
@@ -253,7 +254,11 @@ Pass a package instead of `true` to pin a version (e.g. `node = pkgs.nodejs_22`)
 | `useLatestDefaults` | `false` | Resolve toggles to the newest *stable* packages in `pkgs` |
 | `graalvm`, `graalvmHome*` | `false` / `null` | GraalVM `GRAALVM_HOME` wiring |
 
-Always included: ripgrep, fd, bat, eza, fzf, delta, gh, docker, nixd, and other common CLI tools.
+Always included: git, gh, ripgrep, fd, bat, eza, fzf, delta, docker, nixd, and other common CLI tools.
+
+**`claudeCode` is off by default and on in all four shells here.** The package is unfree, and forcing its output path without `config.allowUnfree = true` throws — so enabling it unconditionally in the library would break any consumer that has not opted in. Enable it with `claudeCode = true;` and an unfree-permitting `pkgs`.
+
+The nixpkgs wrapper sets `DISABLE_AUTOUPDATER=1`, so `claude` will **not** update itself in these shells; it moves with the channel. The pinned shells therefore lag `latest` by whatever the channel lag is (2.1.223 vs 2.1.278 at the time of writing). Run `nix flake update nixpkgs` to pick up a newer one.
 
 **`autoVenv` is off by default.** It writes a `.venv/` into whatever directory you enter the shell from, which surprises `uv`-managed projects. Turn it on per shell if you want the old behaviour.
 

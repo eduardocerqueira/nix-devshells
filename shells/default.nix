@@ -12,6 +12,8 @@ mkDevShell {
   python = pkgs.python313; # the channel's own python3
   go = pkgs.go_1_26;
 
+  claudeCode = true;
+
   title = "NIX DEVSHELLS — DEFAULT";
   issueUrl = "https://github.com/eduardocerqueira/nix-devshells/issues";
   envVars = [ "GOPATH" ];

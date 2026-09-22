@@ -3,7 +3,7 @@
 set -euo pipefail
 
 echo "==> smoke-ai: core tools"
-for cmd in ollama uv ffmpeg ffprobe hf python git-lfs; do
+for cmd in ollama uv ffmpeg ffprobe hf python git git-lfs claude; do
   command -v "$cmd" >/dev/null
   echo "  ok: $cmd"
 done

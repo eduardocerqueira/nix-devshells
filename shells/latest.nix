@@ -21,6 +21,8 @@ mkDevShell {
   go = true;
   kubectl = true;
 
+  claudeCode = true;
+
   title = "NIX DEVSHELLS — LATEST";
   issueUrl = "https://github.com/eduardocerqueira/nix-devshells/issues";
   envVars = [

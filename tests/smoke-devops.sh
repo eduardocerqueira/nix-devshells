@@ -28,7 +28,7 @@ fi
 echo "  ok: tfsec absent"
 
 echo "==> smoke-devops: SRE utilities"
-for cmd in dive lazydocker grpcurl http yq direnv actionlint pre-commit; do
+for cmd in dive lazydocker grpcurl http yq direnv actionlint pre-commit git claude; do
   command -v "$cmd" >/dev/null
   echo "  ok: $cmd"
 done

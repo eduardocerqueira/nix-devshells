@@ -12,6 +12,8 @@ mkDevShell {
 
   python = pythonAi;
 
+  claudeCode = true;
+
   title = "NIX DEVSHELLS — AI";
   issueUrl = "https://github.com/eduardocerqueira/nix-devshells/issues";
   envVars = [

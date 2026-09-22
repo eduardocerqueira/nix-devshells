@@ -19,6 +19,12 @@
   go ? false,
   kubectl ? false,
 
+  # Claude Code. Off by default because the package is unfree: forcing its
+  # outPath without `config.allowUnfree = true` throws, which would break any
+  # consumer of this library that has not opted in. The four shells in this
+  # repo all enable it.
+  claudeCode ? false,
+
   extraPackages ? [ ],
 
   # Extra rows for the banner: [ { name = "OpenTofu"; package = pkgs.opentofu; } ]
@@ -126,6 +132,7 @@ let
   resolvedPython = resolve defaults.python python;
   resolvedGo = resolve defaults.go go;
   resolvedKubectl = resolve defaults.kubectl kubectl;
+  resolvedClaudeCode = resolve pkgs.claude-code claudeCode;
 
   pythonPackagesFor =
     py:
@@ -171,6 +178,11 @@ let
       pkgs.dust
       pkgs.duf
 
+      resolvedClaudeCode
+
+      # git itself was missing: `delta` (a git pager), `gh` and git-filter-repo
+      # were all here, but `git` fell through to whatever the host had.
+      pkgs.git
       pkgs.gh
       pkgs.git-filter-repo
       pkgs.docker
@@ -314,6 +326,8 @@ let
       (versionRow "helm-docs" resolvedHelmDocs)
       (versionRow "kubectl" resolvedKubectl)
       (versionRow "Docker CLI" pkgs.docker)
+      (versionRow "git" pkgs.git)
+      (versionRow "Claude Code" resolvedClaudeCode)
     ]
     ++ map (e: versionRow e.name e.package) extraVersions
   );

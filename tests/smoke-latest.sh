@@ -3,7 +3,7 @@
 set -euo pipefail
 
 echo "==> smoke-latest: checking required commands"
-for cmd in java mvn node npm pnpm yarn python go helm kubectl gh docker nixd; do
+for cmd in java mvn node npm pnpm yarn python go helm kubectl git gh claude docker nixd; do
   command -v "$cmd" >/dev/null
   echo "  ok: $cmd"
 done
