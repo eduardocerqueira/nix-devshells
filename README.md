@@ -2,26 +2,27 @@
 
 Reproducible dev shells for macOS and Linux — flake-based, profile-persisted.
 
-A small Nix flake library (`mkDevShell`) plus ready-to-use development environments. Designed to coexist with other Nix setups (e.g. work-specific repos) on the same machine.
+A small Nix library (`mkDevShell`) plus ready-to-use development environments, exposed from a single flake. Designed to coexist with other Nix setups (e.g. work-specific repos) on the same machine.
 
-## Flakes
+## Shells
 
-| Flake | Channel | What it provides |
+One flake, four shells. Select with `#<name>`.
+
+| Shell | Channel | What it provides |
 |-------|---------|------------------|
-| [`default`](./flakes/default/) | `nixos-26.05` (pinned) | General development — Node 22, Python 3.12, Go 1.25, pnpm, and common CLI tools |
-| [`latest`](./flakes/latest/) | `nixpkgs-unstable` | All optional languages and tools at the newest **stable** versions packaged in nixpkgs |
-| [`ai`](./flakes/ai/) | `nixos-26.05` (pinned) | AI / ML workflows — Ollama, Python 3.12 with Hugging Face libs, uv, ffmpeg, git-lfs |
-| [`devops`](./flakes/devops/) | `nixos-26.05` (pinned) | DevOps / SRE — Kubernetes, multi-cloud CLIs, OpenTofu, secrets, and platform utilities |
+| `default` | `nixos-26.05` (pinned) | General development — Node 24 (LTS), Python 3.13, Go 1.26, pnpm, and common CLI tools |
+| `latest` | `nixpkgs-unstable` | All optional languages and tools at the newest **stable** versions packaged in nixpkgs |
+| `ai` | `nixos-26.05` (pinned) | AI / ML workflows — Ollama, Python 3.12 with Hugging Face, uv, ffmpeg, git-lfs |
+| `devops` | `nixos-26.05` (pinned) | DevOps / SRE — Kubernetes, multi-cloud CLIs, OpenTofu, secrets, and platform utilities |
 
-## Overview
+## Layout
 
 | Path | Description |
 |------|-------------|
-| [lib/](./lib/) | Shared `mkDevShell` function used by all flakes |
-| [flakes/default/](./flakes/default/) | **Pinned** shell on `nixos-26.05` (Node 22, Python 3.12, Go 1.25) |
-| [flakes/latest/](./flakes/latest/) | **Latest** shell on `nixpkgs-unstable` (all tools enabled) |
-| [flakes/ai/](./flakes/ai/) | **AI / ML** shell on `nixos-26.05` (Ollama, Hugging Face, Python) |
-| [flakes/devops/](./flakes/devops/) | **DevOps / SRE** shell on `nixos-26.05` (k8s, cloud CLIs, IaC) |
+| [flake.nix](./flake.nix) | The flake — `devShells`, `checks`, `formatter`, and the exported `lib` |
+| [lib/default.nix](./lib/default.nix) | The shared `mkDevShell` builder (plain Nix, no inputs of its own) |
+| [shells/](./shells/) | One file per shell: [default](./shells/default.nix), [latest](./shells/latest.nix), [ai](./shells/ai.nix), [devops](./shells/devops.nix) |
+| [tests/](./tests/) | Smoke tests, run both as flake `checks` and through `nix develop` in CI |
 | [nix-shortcut.sh](./nix-shortcut.sh) | Sourceable shell shortcuts (`nix-ai`, `nix-latest`, …) — no Home Manager changes |
 | [templates/home-manager/](./templates/home-manager/) | Optional Home Manager template with `nix-personal-*` aliases |
 | [config/nix.conf](./config/nix.conf) | Minimal Nix settings (flakes enabled) |
@@ -37,6 +38,8 @@ macOS / Linux
 
 This repo does **not** use nix-darwin.
 
+Supported systems: `aarch64-darwin`, `x86_64-linux`, `aarch64-linux`. `x86_64-darwin` is deliberately excluded — nixpkgs 26.05 is the last release to support it.
+
 ## Prerequisites
 
 - Nix with flakes enabled ([Determinate Nix](https://determinate.systems/) recommended on macOS)
@@ -44,56 +47,46 @@ This repo does **not** use nix-darwin.
 
 ## Quick start
 
-### 1. Enable flakes (if needed)
+### Without cloning
 
 ```sh
-mkdir -p ~/.config/nix
-cp config/nix.conf ~/.config/nix/nix.conf
+nix develop github:eduardocerqueira/nix-devshells#ai
 ```
 
-### 2. Create a profile workspace
+Works for `#default`, `#latest`, `#ai`, and `#devops`.
+
+### From a checkout
 
 ```sh
-mkdir -p ~/nix-workspace
+git clone https://github.com/eduardocerqueira/nix-devshells ~/git/nix-devshells
+mkdir -p ~/.config/nix ~/nix-workspace
+cp ~/git/nix-devshells/config/nix.conf ~/.config/nix/nix.conf   # if flakes aren't enabled yet
 ```
 
-### 3. Enter a shell
-
-**Pinned (stable, reproducible):**
+Enter a shell, persisting it as a profile so it survives garbage collection:
 
 ```sh
-nix develop --profile ~/nix-workspace/personal-default /Users/eduardo/git/eduardo/nix-devshells/flakes/default -c zsh -i
-```
-
-**Latest (nixpkgs-unstable, all tools):**
-
-```sh
-nix develop --profile ~/nix-workspace/personal-latest /Users/eduardo/git/eduardo/nix-devshells/flakes/latest -c zsh -i
-```
-
-**AI / ML (Ollama, Hugging Face, Python):**
-
-```sh
-nix develop --profile ~/nix-workspace/personal-ai /Users/eduardo/git/eduardo/nix-devshells/flakes/ai -c zsh -i
-```
-
-**DevOps / SRE (Kubernetes, cloud CLIs, IaC):**
-
-```sh
-nix develop --profile ~/nix-workspace/personal-devops /Users/eduardo/git/eduardo/nix-devshells/flakes/devops -c zsh -i
+nix develop --profile ~/nix-workspace/personal-default ~/git/nix-devshells#default -c zsh -i
+nix develop --profile ~/nix-workspace/personal-latest  ~/git/nix-devshells#latest  -c zsh -i
+nix develop --profile ~/nix-workspace/personal-ai      ~/git/nix-devshells#ai      -c zsh -i
+nix develop --profile ~/nix-workspace/personal-devops  ~/git/nix-devshells#devops  -c zsh -i
 ```
 
 On first run Nix builds the environment; later runs reuse the profile. Exit with `exit`.
 
-### 4. Shell shortcuts (optional)
-
-If you already manage aliases in Home Manager and want to avoid editing `~/.config/home-manager/home.nix`, source the repo shortcuts in your current shell:
+Re-enter an existing profile without touching the flake:
 
 ```sh
-source ~/git/eduardo/nix-devshells/nix-shortcut.sh
+nix develop ~/nix-workspace/personal-default -c zsh -i
 ```
 
-Then enter any shell with a short command:
+### Shell shortcuts
+
+```sh
+source ~/git/nix-devshells/nix-shortcut.sh
+```
+
+Then:
 
 ```sh
 nix-default   # pinned general dev
@@ -102,83 +95,60 @@ nix-ai        # AI / ML
 nix-devops    # DevOps / SRE
 ```
 
-The script resolves the repo path automatically. Override with `NIX_DEVSHELLS_ROOT` or `NIX_DEVSHELLS_WORKSPACE` if needed.
+The script resolves the repo path automatically. Override with `NIX_DEVSHELLS_ROOT` or `NIX_DEVSHELLS_WORKSPACE`. To load shortcuts in every terminal, add the `source` line to `~/.zshrc` (or `~/.bashrc`).
 
-To load shortcuts in every new terminal, add the `source` line to your `~/.zshrc` (or `~/.bashrc`).
+### direnv
 
-## Usage
+A [`.envrc`](./.envrc) is included. In any project:
 
-| Shell | Profile | Shortcut | Enter command |
-|-------|---------|----------|---------------|
-| Pinned default | `~/nix-workspace/personal-default` | `nix-default` | `nix develop --profile ~/nix-workspace/personal-default /Users/eduardo/git/eduardo/nix-devshells/flakes/default -c zsh -i` |
-| Latest | `~/nix-workspace/personal-latest` | `nix-latest` | `nix develop --profile ~/nix-workspace/personal-latest /Users/eduardo/git/eduardo/nix-devshells/flakes/latest -c zsh -i` |
-| AI / ML | `~/nix-workspace/personal-ai` | `nix-ai` | `nix develop --profile ~/nix-workspace/personal-ai /Users/eduardo/git/eduardo/nix-devshells/flakes/ai -c zsh -i` |
-| DevOps / SRE | `~/nix-workspace/personal-devops` | `nix-devops` | `nix develop --profile ~/nix-workspace/personal-devops /Users/eduardo/git/eduardo/nix-devshells/flakes/devops -c zsh -i` |
-| Re-enter pinned profile | `~/nix-workspace/personal-default` | — | `nix develop ~/nix-workspace/personal-default -c zsh -i` |
-| Re-enter latest profile | `~/nix-workspace/personal-latest` | — | `nix develop ~/nix-workspace/personal-latest -c zsh -i` |
-| Re-enter AI profile | `~/nix-workspace/personal-ai` | — | `nix develop ~/nix-workspace/personal-ai -c zsh -i` |
-| Re-enter DevOps profile | `~/nix-workspace/personal-devops` | — | `nix develop ~/nix-workspace/personal-devops -c zsh -i` |
-| HM alias (pinned) | — | `nix-personal-default` | requires Home Manager template |
-| HM alias (latest) | — | `nix-personal-latest` | requires Home Manager template |
-| HM alias (devops) | — | `nix-personal-devops` | requires Home Manager template |
+```sh
+echo 'use flake github:eduardocerqueira/nix-devshells#devops' > .envrc
+direnv allow
+```
 
 ## Available shells
 
-### `flakes/default` — pinned
+### `default` — pinned
 
-Tracks **`nixos-26.05`** (locked in `flake.lock`). Tool versions stay stable until you choose to update the lock file.
+Tracks **`nixos-26.05`** (locked in `flake.lock`). Versions stay put until you update the lock.
 
-| Tool | Version (approx.) |
-|------|-------------------|
-| Node.js | 22.x |
-| Python | 3.12 |
-| Go | 1.25 |
+| Tool | Version |
+|------|---------|
+| Node.js | 24.x — active LTS (EOL 2028-04) |
+| Python | 3.13 — the channel's own `python3` |
+| Go | 1.26 |
 | pnpm | from nixos-26.05 |
 
 Also includes: gh, docker, ripgrep, fd, bat, eza, fzf, delta, nixd, and other common CLI tools.
 
-### `flakes/latest` — newest stable in nixpkgs
+### `latest` — newest stable in nixpkgs
 
-Tracks **`nixpkgs-unstable`** with `useLatestDefaults = true`: each tool resolves to the highest **stable** version packaged in nixpkgs (prereleases like Python `3.15.0rc2` are skipped). Example: Latest Stable Python → `3.14.7`.
+Tracks **`nixpkgs-unstable`** with `useLatestDefaults = true`: each tool resolves to the highest **stable** version packaged in nixpkgs. Prereleases are skipped, so while Python 3.15 is at RC the shell gives you 3.14.
 
 | Tool | Package attr | Latest stable (approx.) |
 |------|--------------|-------------------------|
 | Java | `temurin-bin-26` | 26.0.x |
-| Python | `python314` (skips `python315` while RC) | 3.14.7 |
+| Python | `python314` (skips `python315` while RC) | 3.14.x |
 | Node.js | `nodejs_latest` | 26.x |
 | Go | `go` | 1.26.x |
-| Maven, pnpm, Helm, kubectl | defaults | latest stable in unstable |
+| Yarn | `yarn-berry` | 4.x — **not** Yarn Classic 1.22 |
+| Helm | `kubernetes-helm` | **4.x** — note the major bump vs. the pinned shells' Helm 3 |
+| Maven, pnpm, kubectl | defaults | latest stable in unstable |
 
-All optional tools enabled: Java, Maven, Node, pnpm, Yarn, Python, Go, Helm, kubectl, and the shared CLI bundle.
+**Note:** Nix only ships what is packaged in [nixpkgs](https://github.com/NixOS/nixpkgs). `latest` always prefers the newest **final** release available there — not alphas, betas, or RCs.
 
-Refresh packages:
+### `ai` — AI / ML
 
-```sh
-nix flake update --flake /Users/eduardo/git/eduardo/nix-devshells/flakes/latest
-```
-
-After updating the flake, rebuild the profile (otherwise an old profile may keep previous versions):
-
-```sh
-nix develop --profile ~/nix-workspace/personal-latest /Users/eduardo/git/eduardo/nix-devshells/flakes/latest -c zsh -i
-```
-
-**Note:** Nix only ships what is packaged in [nixpkgs](https://github.com/NixOS/nixpkgs). `flakes/latest` always prefers the newest **final** release available there — not alphas, betas, or RCs.
-
-### `flakes/ai` — AI / ML
-
-Tracks **`nixos-26.05`**. Python 3.12 with Hugging Face libraries pre-installed; heavy ML deps (torch, transformers, etc.) are added per-project via `uv`.
+Tracks **`nixos-26.05`**. Python 3.12 with Hugging Face libraries; heavy ML deps (torch, transformers, …) are added per-project via `uv`.
 
 | Tool / area | Included |
 |-------------|----------|
 | Local LLMs | Ollama (`OLLAMA_HOST`, `OLLAMA_MODELS` configured on enter) |
-| Python | 3.12 + uv + pip; `huggingface-hub` (`hf` CLI). Add tokenizers/torch/transformers via `uv` |
-| Hugging Face | `hf` Hub CLI (`huggingface-hub` 1.x); set `HF_TOKEN` for gated models |
+| Python | 3.12 + uv + pip; `huggingface-hub` (`hf` CLI) |
+| Hugging Face | `hf` Hub CLI; set `HF_TOKEN` for gated models |
 | Media & storage | ffmpeg, git-lfs |
 
-Also includes the shared CLI bundle (gh, ripgrep, fd, bat, etc.).
-
-### `flakes/devops` — DevOps / SRE
+### `devops` — DevOps / SRE
 
 Tracks **`nixos-26.05`**. Kubernetes-first shell with multi-cloud CLIs and infrastructure tooling.
 
@@ -186,16 +156,24 @@ Tracks **`nixos-26.05`**. Kubernetes-first shell with multi-cloud CLIs and infra
 |-------------|----------|
 | Kubernetes | kubectl, helm, k9s, kubectx, stern, kubecolor, helmfile, fluxcd, argocd |
 | Cloud CLIs | AWS, Azure, GCP, Cloudflare (`cloudflared`, `wrangler`) |
-| IaC & secrets | OpenTofu (`terraform` alias), sops, age, tflint, tfsec, checkov, step-cli |
+| IaC & secrets | OpenTofu (`terraform` wrapper), sops, age, tflint, **trivy**, checkov, step-cli |
 | SRE utilities | dive, lazydocker, grpcurl, httpie, yq, direnv, actionlint, pre-commit |
 
-Shell shortcuts: `k`, `kns`, `kgp`, `kgpa`. Respects `KUBECONFIG`, `AWS_PROFILE`, and other cloud env vars.
+Shortcuts `k`, `kns`, `kgp`, `kgpa` and the `terraform` → `tofu` wrapper are real packages in the shell's closure, so they work under any shell and leave nothing behind in `/tmp`.
+
+`tfsec` is **not** included: it is end-of-life upstream ("Tfsec is now part of Trivy"). Use `trivy config .` in its place.
+
+## Environment variables
+
+| Variable | Effect |
+|----------|--------|
+| `NIX_DEVSHELL_QUIET` | Set to any value to suppress the banner and project-detection hints |
+| `NIX_DEVSHELLS_ROOT` | Override the repo path used by `nix-shortcut.sh` |
+| `NIX_DEVSHELLS_WORKSPACE` | Override the profile directory (default `~/nix-workspace`) |
 
 ## Optional: Home Manager aliases
 
-Prefer [shell shortcuts](#4-shell-shortcuts-optional) if you already have a Home Manager setup and want to avoid merging alias changes into `~/.config/home-manager/home.nix`.
-
-Alternatively, copy the template and customize the `USER CONFIGURATION` block:
+Prefer the [shell shortcuts](#shell-shortcuts) if you already have a Home Manager setup. Otherwise copy the template and customize the `USER CONFIGURATION` block:
 
 ```sh
 mkdir -p ~/.config/home-manager
@@ -204,113 +182,131 @@ cp templates/home-manager/*.nix ~/.config/home-manager/
 home-manager switch --flake ~/.config/home-manager#YOUR_USER
 ```
 
-Then use:
+Then use `nix-personal-default`, `nix-personal-latest`, `nix-personal-ai`, or `nix-personal-devops`.
 
-```sh
-nix-personal-default   # pinned
-nix-personal-latest    # latest
-nix-personal-devops    # devops / sre
-```
-
-See [templates/home-manager/README.md](./templates/home-manager/README.md) for coexistence notes with other Nix repos.
+See [templates/home-manager/README.md](./templates/home-manager/README.md) for coexistence notes.
 
 ## Coexistence with other Nix repos
 
 One Nix install serves all repos. Avoid conflicts by:
 
-- **Separate profile names** — e.g. `personal-default`, `personal-latest`, `personal-ai`, `personal-devops` vs work profiles in `~/nix-workspace/`
+- **Separate profile names** — `personal-default`, `personal-latest`, … vs work profiles in `~/nix-workspace/`
 - **Separate alias prefixes** — `nix-personal-*` vs work aliases
 - **Git identity via `includeIf`** — don't rely on switching Home Manager for work vs personal email
 
-## Creating a new shell
+## Using `mkDevShell` elsewhere
+
+The builder is exported as a flake output, so other repos can consume it without copying anything:
 
 ```nix
-# flakes/my-project/flake.nix
 {
   inputs = {
-    base.url = "path:../../lib";
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05"; # or nixpkgs-unstable
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
+    nix-devshells.url = "github:eduardocerqueira/nix-devshells";
   };
 
-  outputs = { base, nixpkgs }: {
-    devShells.aarch64-darwin.default =
-      let pkgs = import nixpkgs { system = "aarch64-darwin"; config.allowUnfree = true; };
-      in base.lib.mkDevShell {
-        system = "aarch64-darwin";
+  outputs = { nixpkgs, nix-devshells, ... }:
+    let
+      system = "aarch64-darwin";
+      pkgs = import nixpkgs { inherit system; config.allowUnfree = true; };
+    in {
+      devShells.${system}.default = nix-devshells.lib.mkDevShell {
         inherit pkgs;
         node = true;
         java = true;
         title = "MY PROJECT";
-        extraPackages = [ /* pkgs */ ];
+        extraPackages = [ pkgs.postgresql ];
       };
-  };
+    };
 }
 ```
 
+`mkDevShell` has **no nixpkgs input of its own** — you pass `pkgs`, so it never adds a second nixpkgs to your lock file.
+
 ### `mkDevShell` options
 
-Languages and tools are **opt-in** (`false` by default). Defaults resolve against the flake's `pkgs` (pinned or unstable):
+Languages and tools are **opt-in** (`false` by default) and resolve against the `pkgs` you pass.
 
 | Option | Default | When `true` |
 |--------|---------|-------------|
+| `pkgs` | *(required)* | The package set to build against |
 | `java` | `false` | Temurin (`temurin-bin`, or `temurin-bin-26` with `useLatestDefaults`) |
 | `maven` | `false` | Maven |
 | `node` | `false` | Node.js (`nodejs`, or `nodejs_latest` with `useLatestDefaults`) |
 | `pnpm` | `false` | pnpm |
-| `yarn` | `false` | Yarn |
-| `python` | `false` | Python 3 + pip + uv (`python3`, or latest stable e.g. `python314` / 3.14.7 with `useLatestDefaults`) |
+| `yarn` | `false` | Yarn Classic (or `yarn-berry` 4.x with `useLatestDefaults`) |
+| `python` | `false` | Python 3 + pip + uv |
 | `go` | `false` | Go + gotools |
-| `helm` | `false` | Kubernetes Helm |
+| `helm` / `helmDocs` | `false` | Kubernetes Helm / helm-docs |
 | `kubectl` | `false` | kubectl |
+
+Pass a package instead of `true` to pin a version (e.g. `node = pkgs.nodejs_22`).
+
+| Option | Default | Effect |
+|--------|---------|--------|
+| `extraPackages` | `[]` | Additional packages |
+| `extraVersions` | `[]` | Extra banner rows: `[ { name = "OpenTofu"; package = pkgs.opentofu; } ]` |
+| `title` / `issueUrl` | — | Banner header |
+| `envVars` | `[]` | Environment variables to show in the banner when set |
+| `shellHookExtra` / `shellInitExtra` | `""` | Extra shell code |
+| `autoVenv` | `false` | Create and activate `./.venv` when a Python project is detected |
+| `useLatestDefaults` | `false` | Resolve toggles to the newest *stable* packages in `pkgs` |
+| `graalvm`, `graalvmHome*` | `false` / `null` | GraalVM `GRAALVM_HOME` wiring |
 
 Always included: ripgrep, fd, bat, eza, fzf, delta, gh, docker, nixd, and other common CLI tools.
 
-Pass a package instead of `true` to pin a specific version (e.g. `node = pkgs.nodejs_22`).
+**`autoVenv` is off by default.** It writes a `.venv/` into whatever directory you enter the shell from, which surprises `uv`-managed projects. Turn it on per shell if you want the old behaviour.
+
+**The banner is generated at evaluation time** from the packages the shell actually provides, so it can never report a tool that merely happens to be on your host `PATH` — and entering a shell spawns no subprocesses to collect versions.
 
 ## Updating
 
-**Pinned shell** — update only when you want new stable versions:
-
 ```sh
-cd /Users/eduardo/git/eduardo/nix-devshells
-nix flake update flakes/default
+cd ~/git/nix-devshells
+nix flake update                    # both nixpkgs inputs
+nix flake update nixpkgs-unstable   # just the `latest` shell's channel
+nix flake update nixpkgs            # just the pinned channel
 ```
 
-**Latest shell** — update to pull newest nixpkgs packages:
+Positional arguments to `nix flake update` are **input names**, not paths. To update a flake in another directory, use `--flake`:
 
 ```sh
-cd /Users/eduardo/git/eduardo/nix-devshells
-nix flake update --flake flakes/latest
+nix flake update --flake ~/git/nix-devshells
 ```
 
-Re-enter the shell to pick up changes.
+After updating, re-enter the shell so the profile picks up the new closure.
 
 ## Testing
 
-Run locally before opening a PR:
+```sh
+nix flake check --all-systems     # evaluate every system + run every smoke test
+nix fmt                           # format all .nix files (nixfmt)
+```
+
+`--all-systems` matters: without it, Nix only evaluates outputs for the machine you are on, so a Darwin-only error stays invisible on Linux and vice versa.
+
+Run one smoke test against a real shell (this also exercises the `shellHook`):
 
 ```sh
-nix flake check ./lib
-nix flake check ./flakes/default
-nix flake check ./flakes/latest
-nix flake check ./flakes/ai
-nix flake check ./flakes/devops
-nix develop ./flakes/default --command bash tests/smoke-default.sh
-nix develop ./flakes/latest --command bash tests/smoke-latest.sh
-nix develop ./flakes/ai --command bash tests/smoke-ai.sh
-nix develop ./flakes/devops --command bash tests/smoke-devops.sh
+nix develop .#default --command bash tests/smoke-default.sh
+nix develop .#latest  --command bash tests/smoke-latest.sh
+nix develop .#ai      --command bash tests/smoke-ai.sh
+nix develop .#devops  --command bash tests/smoke-devops.sh
 ```
 
 ## CI
 
-GitHub Actions runs on every push to `main` and on pull requests ([`.github/workflows/ci.yml`](./.github/workflows/ci.yml)):
+GitHub Actions ([`.github/workflows/ci.yml`](./.github/workflows/ci.yml)) runs on push to `main`, on pull requests, weekly on a schedule, and on demand.
 
 | Job | What it checks |
 |-----|----------------|
-| **flake check** | Evaluates `lib`, `flakes/default`, `flakes/latest`, `flakes/ai`, and `flakes/devops` |
-| **smoke test** | Builds each dev shell on Linux and verifies required tools and version constraints |
+| **flake check** | `nix flake check --all-systems --no-build` on Linux **and** macOS |
+| **smoke test** | Each of the four shells entered via `nix develop` on Linux **and** macOS |
+| **shellcheck** | All scripts in `tests/` plus `nix-shortcut.sh` |
 
-To require CI before merge, enable branch protection on `main` and select the **flake check** and **smoke test** checks in GitHub repository settings.
+The weekly schedule exists because `latest` tracks `nixpkgs-unstable`: without it, upstream breakage would only surface the next time someone pushed.
+
+To require CI before merge, enable branch protection on `main` and select these checks in repository settings.
 
 ## License
 

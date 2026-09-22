@@ -9,7 +9,8 @@
     };
   };
 
-  outputs = { nixpkgs, home-manager, ... }:
+  outputs =
+    { nixpkgs, home-manager, ... }:
     let
       system = "aarch64-darwin";
       pkgs = nixpkgs.legacyPackages.${system};
@@ -19,16 +20,23 @@
       # ============================================================================
       username = "YOUR_USER";
       homeDirectory = "/Users/YOUR_USER";
-      nixDevshellsPath = "/Users/YOUR_USER/git/eduardo/nix-devshells";
+      nixDevshellsPath = "/Users/YOUR_USER/git/nix-devshells";
       gitName = "Your Name";
       gitEmail = "you@example.com";
       # ============================================================================
-    in {
+    in
+    {
       homeConfigurations.${username} = home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
         modules = [ ./home.nix ];
         extraSpecialArgs = {
-          inherit username homeDirectory nixDevshellsPath gitName gitEmail;
+          inherit
+            username
+            homeDirectory
+            nixDevshellsPath
+            gitName
+            gitEmail
+            ;
         };
       };
     };
