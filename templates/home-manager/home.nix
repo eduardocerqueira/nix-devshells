@@ -1,13 +1,21 @@
-{ config, pkgs, lib, username, homeDirectory, nixDevshellsPath, gitName, gitEmail, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  username,
+  homeDirectory,
+  nixDevshellsPath,
+  gitName,
+  gitEmail,
+  ...
+}:
 
 {
   home.username = username;
   home.homeDirectory = homeDirectory;
   home.stateVersion = "25.05";
 
-  home.packages = with pkgs; [
-    zsh-powerlevel10k
-  ];
+  home.packages = with pkgs; [ zsh-powerlevel10k ];
 
   home.sessionVariables = {
     EDITOR = "vim";
@@ -28,9 +36,10 @@
     enable = true;
     enableCompletion = true;
     shellAliases = {
-      nix-personal-default = "nix develop --profile ~/nix-workspace/personal-default ${nixDevshellsPath}/flakes/default -c zsh -i";
-      nix-personal-latest = "nix develop --profile ~/nix-workspace/personal-latest ${nixDevshellsPath}/flakes/latest -c zsh -i";
-      nix-personal-devops = "nix develop --profile ~/nix-workspace/personal-devops ${nixDevshellsPath}/flakes/devops -c zsh -i";
+      nix-personal-app = "nix develop --profile ~/nix-workspace/personal-app ${nixDevshellsPath}#app -c zsh -i";
+      nix-personal-edge = "nix develop --profile ~/nix-workspace/personal-edge ${nixDevshellsPath}#edge -c zsh -i";
+      nix-personal-ai = "nix develop --profile ~/nix-workspace/personal-ai ${nixDevshellsPath}#ai -c zsh -i";
+      nix-personal-devops = "nix develop --profile ~/nix-workspace/personal-devops ${nixDevshellsPath}#devops -c zsh -i";
     };
     plugins = [
       {

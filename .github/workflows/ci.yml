@@ -4,58 +4,71 @@ on:
   push:
     branches: [main]
   pull_request:
+  # The `edge` shell tracks nixpkgs-unstable; without a schedule, upstream breakage
+  # is invisible until someone happens to push.
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   flake-check:
-    name: flake check — ${{ matrix.flake }}
-    runs-on: ubuntu-latest
+    name: flake check — ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
-        flake:
-          - lib
-          - flakes/default
-          - flakes/latest
-          - flakes/devops
-          - flakes/ai
+        os: [ubuntu-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: DeterminateSystems/nix-installer-action@v15
+      - uses: DeterminateSystems/nix-installer-action@v23
 
-      - uses: DeterminateSystems/magic-nix-cache-action@v13
+      - uses: DeterminateSystems/magic-nix-cache-action@v15
 
-      - name: nix flake check
-        run: nix flake check "./${{ matrix.flake }}"
+      # --all-systems matters: without it only the runner's own system is
+      # evaluated, so a Darwin-only evaluation error ships green.
+      - name: nix flake check (evaluate every system)
+        run: nix flake check --all-systems --no-build
+
+      # --no-build above evaluates the checks without running them; formatting
+      # is cheap enough to actually build. The smoke checks are covered by the
+      # smoke-test job, which also exercises the shellHook.
+      - name: nixfmt + shellcheck
+        run: |
+          system="$(nix eval --raw --impure --expr builtins.currentSystem)"
+          nix build -L ".#checks.$system.format" ".#checks.$system.shellcheck"
 
   smoke-test:
-    name: smoke test — ${{ matrix.flake }}
-    runs-on: ubuntu-latest
-    needs: flake-check
+    name: smoke — ${{ matrix.shell }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - flake: flakes/default
-            script: tests/smoke-default.sh
-          - flake: flakes/latest
-            script: tests/smoke-latest.sh
-          - flake: flakes/devops
-            script: tests/smoke-devops.sh
-          - flake: flakes/ai
-            script: tests/smoke-ai.sh
+        os: [ubuntu-latest, macos-latest]
+        shell: [app, edge, ai, devops]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: DeterminateSystems/nix-installer-action@v15
+      - uses: DeterminateSystems/nix-installer-action@v23
 
-      - uses: DeterminateSystems/magic-nix-cache-action@v13
+      - uses: DeterminateSystems/magic-nix-cache-action@v15
 
+      # Through `nix develop`, so the shellHook runs too — the flake's `checks`
+      # cover the same scripts against the package set alone.
       - name: Run smoke test inside dev shell
-        run: |
-          chmod +x "${{ matrix.script }}"
-          nix develop "./${{ matrix.flake }}" --command bash "${{ matrix.script }}"
+        run: nix develop ".#${{ matrix.shell }}" --command bash "tests/smoke-${{ matrix.shell }}.sh"
