@@ -45,6 +45,8 @@
           edge = load ./shells/edge.nix unstable;
           ai = load ./shells/ai.nix stable;
           devops = load ./shells/devops.nix stable;
+          kubernetes = load ./shells/kubernetes.nix stable;
+          upstream = load ./shells/upstream.nix stable;
 
           # `devShells.<system>.default` is what a bare `nix develop` (and
           # `nix develop github:eduardocerqueira/nix-devshells`) resolves to.
@@ -95,6 +97,8 @@
           smoke-edge = smoke unstable "edge";
           smoke-ai = smoke stable "ai";
           smoke-devops = smoke stable "devops";
+          smoke-kubernetes = smoke stable "kubernetes";
+          smoke-upstream = smoke stable "upstream";
 
           # shellcheck is not in the shells any more (Haskell runtime), so the
           # repo lints itself here instead: `nix flake check` covers it.

@@ -60,7 +60,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        shell: [app, edge, ai, devops]
+        shell: [app, edge, ai, devops, kubernetes, upstream]
     steps:
       - uses: actions/checkout@v7
 
