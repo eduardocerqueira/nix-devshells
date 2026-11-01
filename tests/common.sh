@@ -2,7 +2,7 @@
 # Shared assertions for the smoke tests. Sourced, never executed.
 
 # Everything lib/default.nix puts in every shell, regardless of toggles.
-# Kept here so the four smoke tests cannot drift apart.
+# Kept here so the smoke tests cannot drift apart.
 # shellcheck disable=SC2034  # consumed by the scripts that source this file
 SHARED_TOOLS=(
   git gh git-filter-repo lazygit gitleaks

@@ -40,6 +40,8 @@
       nix-personal-edge = "nix develop --profile ~/nix-workspace/personal-edge ${nixDevshellsPath}#edge -c zsh -i";
       nix-personal-ai = "nix develop --profile ~/nix-workspace/personal-ai ${nixDevshellsPath}#ai -c zsh -i";
       nix-personal-devops = "nix develop --profile ~/nix-workspace/personal-devops ${nixDevshellsPath}#devops -c zsh -i";
+      nix-personal-kubernetes = "nix develop --profile ~/nix-workspace/personal-kubernetes ${nixDevshellsPath}#kubernetes -c zsh -i";
+      nix-personal-upstream = "nix develop --profile ~/nix-workspace/personal-upstream ${nixDevshellsPath}#upstream -c zsh -i";
     };
     plugins = [
       {

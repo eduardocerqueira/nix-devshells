@@ -6,7 +6,7 @@ A small Nix library (`mkDevShell`) plus ready-to-use development environments, e
 
 ## Shells
 
-One flake, four shells, named by what they are for. Select with `#<name>`.
+One flake, six shells, named by what they are for. Select with `#<name>`.
 
 | Shell | Channel | What it provides |
 |-------|---------|------------------|
@@ -14,6 +14,8 @@ One flake, four shells, named by what they are for. Select with `#<name>`.
 | `edge` | `nixpkgs-unstable` | Every packaged language at the newest **stable** version — including the JVM |
 | `ai` | `nixos-26.05` (pinned) | AI / ML workflows — Ollama, Python 3.12 with Hugging Face, uv, ffmpeg, git-lfs |
 | `devops` | `nixos-26.05` (pinned) | DevOps / SRE — Kubernetes, AWS, OpenTofu, secrets, and platform utilities |
+| `kubernetes` | `nixos-26.05` (pinned) | Contributing to kubernetes/kubernetes, minikube and kubernetes/website — Go 1.27, Hugo 0.144.2 extended, GNU userland, etcd, kind |
+| `upstream` | `nixos-26.05` (pinned) | Generic open-source contribution — Node, Python, Go, and the lint/licence/spelling checks upstream CI runs |
 
 `nix develop` with no attribute resolves to `app` — `devShells.<system>.default` is an alias for it, so bare `nix develop` and `nix develop github:eduardocerqueira/nix-devshells` keep working.
 
@@ -23,9 +25,9 @@ One flake, four shells, named by what they are for. Select with `#<name>`.
 |------|-------------|
 | [flake.nix](./flake.nix) | The flake — `devShells`, `checks`, `formatter`, and the exported `lib` |
 | [lib/default.nix](./lib/default.nix) | The shared `mkDevShell` builder (plain Nix, no inputs of its own) |
-| [shells/](./shells/) | One file per shell: [app](./shells/app.nix), [edge](./shells/edge.nix), [ai](./shells/ai.nix), [devops](./shells/devops.nix) |
+| [shells/](./shells/) | One file per shell: [app](./shells/app.nix), [edge](./shells/edge.nix), [ai](./shells/ai.nix), [devops](./shells/devops.nix), [kubernetes](./shells/kubernetes.nix), [upstream](./shells/upstream.nix) |
 | [tests/](./tests/) | Smoke tests, run both as flake `checks` and through `nix develop` in CI; shared assertions in [common.sh](./tests/common.sh) |
-| [nix-shortcut.sh](./nix-shortcut.sh) | Sourceable shell shortcuts (`nix-app`, `nix-edge`, `nix-ai`, `nix-devops`) |
+| [nix-shortcut.sh](./nix-shortcut.sh) | Sourceable shell shortcuts (`nix-app`, `nix-edge`, `nix-ai`, `nix-devops`, `nix-kubernetes`, `nix-upstream`) |
 | [templates/home-manager/](./templates/home-manager/) | Optional Home Manager template with `nix-personal-*` aliases |
 | [config/nix.conf](./config/nix.conf) | Minimal Nix settings (flakes enabled) |
 
@@ -55,7 +57,7 @@ Supported systems: `aarch64-darwin`, `x86_64-linux`, `aarch64-linux`. `x86_64-da
 nix develop github:eduardocerqueira/nix-devshells#ai
 ```
 
-Works for `#app`, `#edge`, `#ai`, and `#devops`.
+Works for `#app`, `#edge`, `#ai`, `#devops`, `#kubernetes`, and `#upstream`.
 
 ### From a checkout
 
@@ -68,10 +70,12 @@ cp ~/git/nix-devshells/config/nix.conf ~/.config/nix/nix.conf   # if flakes aren
 Enter a shell, persisting it as a profile so it survives garbage collection:
 
 ```sh
-nix develop --profile ~/nix-workspace/personal-app    ~/git/nix-devshells#app    -c zsh -i
-nix develop --profile ~/nix-workspace/personal-edge   ~/git/nix-devshells#edge   -c zsh -i
-nix develop --profile ~/nix-workspace/personal-ai     ~/git/nix-devshells#ai     -c zsh -i
-nix develop --profile ~/nix-workspace/personal-devops ~/git/nix-devshells#devops -c zsh -i
+nix develop --profile ~/nix-workspace/personal-app        ~/git/nix-devshells#app        -c zsh -i
+nix develop --profile ~/nix-workspace/personal-edge       ~/git/nix-devshells#edge       -c zsh -i
+nix develop --profile ~/nix-workspace/personal-ai         ~/git/nix-devshells#ai         -c zsh -i
+nix develop --profile ~/nix-workspace/personal-devops     ~/git/nix-devshells#devops     -c zsh -i
+nix develop --profile ~/nix-workspace/personal-kubernetes ~/git/nix-devshells#kubernetes -c zsh -i
+nix develop --profile ~/nix-workspace/personal-upstream   ~/git/nix-devshells#upstream   -c zsh -i
 ```
 
 On first run Nix builds the environment; later runs reuse the profile. Exit with `exit`.
@@ -91,10 +95,12 @@ source ~/git/nix-devshells/nix-shortcut.sh
 Then:
 
 ```sh
-nix-app      # everyday application dev (pinned)
-nix-edge     # every language, newest stable (unstable channel)
-nix-ai       # AI / ML
-nix-devops   # DevOps / SRE
+nix-app         # everyday application dev (pinned)
+nix-edge        # every language, newest stable (unstable channel)
+nix-ai          # AI / ML
+nix-devops      # DevOps / SRE
+nix-kubernetes  # kubernetes, minikube, kubernetes/website
+nix-upstream    # generic open-source contribution
 ```
 
 The script resolves the repo path automatically. Override with `NIX_DEVSHELLS_ROOT` or `NIX_DEVSHELLS_WORKSPACE`. To load shortcuts in every terminal, add the `source` line to `~/.zshrc` (or `~/.bashrc`).
@@ -171,6 +177,38 @@ Three things are deliberately **absent**:
 - **`azure-cli` and `google-cloud-sdk`** — ~750 MiB for clouds this shell's owner does not use. Add them per-project if you need them.
 
 `wrangler` is large (~1.9 GiB) for reasons outside this repo: the nixpkgs derivation ships the whole `workers-sdk` pnpm workspace, including 43 copies of typescript and 7 of `workerd`.
+
+### `kubernetes` — Kubernetes contributor
+
+Tracks **`nixos-26.05`**. One shell for [kubernetes/kubernetes](https://github.com/kubernetes/kubernetes), [kubernetes/minikube](https://github.com/kubernetes/minikube) and [kubernetes/website](https://github.com/kubernetes/website).
+
+| Tool / area | Included |
+|-------------|----------|
+| Go | 1.27 (minikube's `go.mod`), gopls, delve |
+| Website | **Hugo 0.144.2 extended**, Node 24, pagefind, Python 3 |
+| `hack/` scripts | GNU sed, tar, grep, awk, findutils, diffutils, rsync, bash 5 — shadowing macOS's BSD tools and bash 3.2 |
+| Clusters & tests | kubectl, kind, etcd 3.6, vfkit (macOS, minikube's native driver) |
+
+**Hugo is pinned on purpose.** kubernetes/website sets `HUGO_VERSION` in `netlify.toml`, and newer Hugo releases break its docsy theme. The channel ships 0.163, so the shell builds 0.144.2 from source (`hugo.overrideAttrs` in [shells/kubernetes.nix](./shells/kubernetes.nix)). When website bumps `HUGO_VERSION`, update `version`, `hash` and `vendorHash` there. Entering the shell in a directory whose `netlify.toml` asks for a different Hugo prints a warning.
+
+minikube's docs site pins its own, newer Hugo. That's fine: `make site` in minikube builds it into `out/hugo` and never uses the shell's `hugo`.
+
+Node 24 instead of website's `NODE_VERSION = 20.17.0`: Node 20 is end-of-life and nixpkgs marks it insecure. Website only uses Node for postcss/autoprefixer, which run fine on 24, and 24 is what minikube's site asks for.
+
+kubernetes/kubernetes pins its exact Go in `.go-version`; when that differs from 1.27.x, Go's own `GOTOOLCHAIN` mechanism downloads it.
+
+### `upstream` — open-source contribution
+
+Tracks **`nixos-26.05`**. Node, Python 3 and Go at the channel defaults, plus the checks maintainers usually run in CI, so a PR passes them before it is pushed.
+
+| Tool / area | Included |
+|-------------|----------|
+| Workflow | pre-commit, git-absorb, gh-dash, act (runs GitHub Actions locally via docker) |
+| Lint & hygiene | codespell, typos, markdownlint-cli2, yamllint, actionlint, editorconfig-checker |
+| Licensing & commits | reuse (REUSE / SPDX), commitizen (`cz`) |
+| Orientation | scc |
+
+Projects with their own toolchain get a dedicated shell, as `kubernetes` does.
 
 ## Environment variables
 
@@ -284,7 +322,7 @@ The Nix group exists so this repo's own lint pass is reproducible from inside an
 
 `openssh` is deliberately **not** included: nixpkgs' ssh lacks Apple's `UseKeychain` option, so shadowing `/usr/bin/ssh` breaks macOS `~/.ssh/config` files that use it.
 
-**`claudeCode` is off by default and on in all four shells here.** The package is unfree, and forcing its output path without `config.allowUnfree = true` throws — so enabling it unconditionally in the library would break any consumer that has not opted in. Enable it with `claudeCode = true;` and an unfree-permitting `pkgs`.
+**`claudeCode` is off by default and on in every shell here.** The package is unfree, and forcing its output path without `config.allowUnfree = true` throws — so enabling it unconditionally in the library would break any consumer that has not opted in. Enable it with `claudeCode = true;` and an unfree-permitting `pkgs`.
 
 The nixpkgs wrapper sets `DISABLE_AUTOUPDATER=1`, so `claude` will **not** update itself in these shells; it moves with the channel. The pinned shells therefore lag `edge` by whatever the channel lag is (2.1.223 vs 2.1.278 at the time of writing). Run `nix flake update nixpkgs` to pick up a newer one.
 
@@ -325,6 +363,8 @@ nix develop .#app    --command bash tests/smoke-app.sh
 nix develop .#edge   --command bash tests/smoke-edge.sh
 nix develop .#ai     --command bash tests/smoke-ai.sh
 nix develop .#devops --command bash tests/smoke-devops.sh
+nix develop .#kubernetes --command bash tests/smoke-kubernetes.sh
+nix develop .#upstream   --command bash tests/smoke-upstream.sh
 ```
 
 ## CI
@@ -334,7 +374,7 @@ GitHub Actions ([`.github/workflows/ci.yml`](./.github/workflows/ci.yml)) runs o
 | Job | What it checks |
 |-----|----------------|
 | **flake check** | `nix flake check --all-systems --no-build` on Linux **and** macOS, plus the `format` and `shellcheck` checks |
-| **smoke test** | Each of the four shells entered via `nix develop` on Linux **and** macOS |
+| **smoke test** | Each of the six shells entered via `nix develop` on Linux **and** macOS |
 
 
 The weekly schedule exists because `edge` tracks `nixpkgs-unstable`: without it, upstream breakage would only surface the next time someone pushed.

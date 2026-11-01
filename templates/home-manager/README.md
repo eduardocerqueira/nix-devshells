@@ -13,10 +13,11 @@ Edit the `USER CONFIGURATION` block in `flake.nix` (username, paths, git identit
 home-manager switch --flake ~/.config/home-manager#YOUR_USER
 ```
 
-This adds four aliases, one per shell:
+This adds six aliases, one per shell:
 
 ```sh
 nix-personal-app   nix-personal-edge   nix-personal-ai   nix-personal-devops
+nix-personal-kubernetes   nix-personal-upstream
 ```
 
 Each one is `nix develop --profile ~/nix-workspace/personal-<name> <repo>#<name> -c zsh -i`.
