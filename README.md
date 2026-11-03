@@ -15,7 +15,7 @@ One flake, six shells, named by what they are for. Select with `#<name>`.
 | `ai` | `nixos-26.05` (pinned) | AI / ML workflows — Ollama, Python 3.12 with Hugging Face, uv, ffmpeg, git-lfs |
 | `devops` | `nixos-26.05` (pinned) | DevOps / SRE — Kubernetes, AWS, OpenTofu, secrets, and platform utilities |
 | `kubernetes` | `nixos-26.05` (pinned) | Contributing to kubernetes/kubernetes, minikube and kubernetes/website — Go 1.27, Hugo 0.144.2 extended, GNU userland, etcd, kind |
-| `upstream` | `nixos-26.05` (pinned) | Generic open-source contribution — Node, Python, Go, and the lint/licence/spelling checks upstream CI runs |
+| `upstream` | `nixos-26.05` (pinned) | Generic open-source contribution — Java 21 (+17), Maven, Node with pnpm and Yarn, Python, Go, Helm, kubectl, and the lint/licence/spelling checks upstream CI runs |
 
 `nix develop` with no attribute resolves to `app` — `devShells.<system>.default` is an alias for it, so bare `nix develop` and `nix develop github:eduardocerqueira/nix-devshells` keep working.
 
@@ -199,14 +199,22 @@ kubernetes/kubernetes pins its exact Go in `.go-version`; when that differs from
 
 ### `upstream` — open-source contribution
 
-Tracks **`nixos-26.05`**. Node, Python 3 and Go at the channel defaults, plus the checks maintainers usually run in CI, so a PR passes them before it is pushed.
+Tracks **`nixos-26.05`**. The common languages, plus the checks maintainers usually run in CI, so a PR passes them before it is pushed.
 
 | Tool / area | Included |
 |-------------|----------|
+| JVM | Java 21 (Temurin) on `PATH` and as `JAVA_HOME`; Java 17 as `JAVA17_HOME` only; Maven |
+| JavaScript | Node.js 24, pnpm, Yarn Classic 1.22 |
+| Python & Go | Python 3 (+ pip, uv), Go — channel defaults |
+| Kubernetes clients | Helm, kubectl |
 | Workflow | pre-commit, git-absorb, gh-dash, act (runs GitHub Actions locally via docker) |
 | Lint & hygiene | codespell, typos, markdownlint-cli2, yamllint, actionlint, editorconfig-checker |
 | Licensing & commits | reuse (REUSE / SPDX), commitizen (`cz`) |
 | Orientation | scc |
+
+Java 17 is deliberately **not** on `PATH`: two `java` binaries would shadow each other. Point a build at it with `JAVA_HOME="$JAVA17_HOME" mvn …` or through Maven toolchains.
+
+pnpm is the channel's 11.x. A project that pins another version in `package.json` (`"packageManager": "pnpm@10.29.2"`) still gets that version: pnpm switches to it by itself, no Corepack setup needed.
 
 Projects with their own toolchain get a dedicated shell, as `kubernetes` does.
 

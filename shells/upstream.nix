@@ -5,18 +5,33 @@
 # `kubernetes`.
 { pkgs, mkDevShell }:
 
+let
+  # Off PATH on purpose: Java 21 is `java`; 17 is only reachable through
+  # JAVA17_HOME, for projects (and Maven toolchains) that still build on it.
+  java17 = pkgs.temurin-bin-17;
+in
 mkDevShell {
   inherit pkgs;
 
+  java = pkgs.temurin-bin-21;
+  maven = true;
   node = true;
+  pnpm = true;
+  yarn = true; # Classic 1.22, which most yarn.lock files in the wild still are
   python = true;
   go = true;
+  helm = true;
+  kubectl = true;
 
   claudeCode = true;
 
   title = "NIX DEVSHELLS — UPSTREAM";
   issueUrl = "https://github.com/eduardocerqueira/nix-devshells/issues";
-  envVars = [ "GOPATH" ];
+  envVars = [
+    "JAVA_HOME"
+    "JAVA17_HOME"
+    "GOPATH"
+  ];
 
   extraPackages = with pkgs; [
     # Contribution workflow
@@ -40,6 +55,10 @@ mkDevShell {
 
   extraVersions = [
     {
+      name = "Java 17 (JAVA17_HOME)";
+      package = java17;
+    }
+    {
       name = "pre-commit";
       package = pkgs.pre-commit;
     }
@@ -48,4 +67,8 @@ mkDevShell {
       package = pkgs.act;
     }
   ];
+
+  shellHookExtra = ''
+    export JAVA17_HOME="${java17.home or java17}"
+  '';
 }
